@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  REVIEWER
+}
+
+enum AssetVersionStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum ApprovalStatus {
+  PENDING
+  CHANGES_REQUESTED
+  APPROVED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships      OrganizationMember[]
+  projectMembers   ProjectMember[]
+  comments         Comment[]
+  replies          CommentReply[]
+  approvals        Approval[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  inviteTokens     InviteToken[]
+}
+
+model InviteToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model GuestReviewer {
+  id        String   @id @default(cuid())
+  email     String?
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments  Comment[]
+  approvals Approval[]
+  replies   CommentReply[]
+
+  @@unique([email])
+}
+
+model Organization {
+  id                 String   @id @default(cuid())
+  name               String
+  slug               String   @unique
+  logoUrl            String?
+  brandColor         String?
+  storageQuotaBytes  BigInt?
+  storageUsedBytes   BigInt   @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  members  OrganizationMember[]
+  projects Project[]
+  auditLogs AuditLog[]
+  folders  Folder[]
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  actorUserId    String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+
+  actorUser    User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  role           OrganizationRole @default(MEMBER)
+  userId         String
+  organizationId String
+  createdAt      DateTime         @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model Project {
+  id             String    @id @default(cuid())
+  name           String
+  organizationId String
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assets       Asset[]
+  shareLinks   ShareLink[]
+  folders      Folder[]
+  members      ProjectMember[]
+
+  @@index([archivedAt])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  projectId String
+  parentId  String?
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Folder[] @relation("FolderTree")
+  assets   Asset[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  @@index([projectId])
+  @@index([parentId])
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  name      String
+  projectId String
+  folderId  String?
+  archivedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder   Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  versions AssetVersion[]
+
+  @@index([archivedAt])
+  @@index([folderId])
+}
+
+model AssetVersion {
+  id              String             @id @default(cuid())
+  assetId         String
+  versionNumber   Int
+  originalKey     String
+  proxyKey        String?
+  hlsManifestKey  String?
+  thumbnailKey    String?
+  durationSeconds Float?
+  frameRate       Float?
+  width           Int?
+  height          Int?
+  failureReason   String?
+  archivedAt      DateTime?
+  status          AssetVersionStatus @default(UPLOADED)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  asset      Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  approvals  Approval[]
+  shareLinks ShareLink[]
+
+  @@unique([assetId, versionNumber])
+  @@index([archivedAt])
+}
+
+model Comment {
+  id              String    @id @default(cuid())
+  assetVersionId  String
+  authorId        String?
+  guestReviewerId String?
+  body            String
+  timeSeconds     Float
+  frame           Int?
+  annotationJson  Json?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  assetVersion  AssetVersion   @relation(fields: [assetVersionId], references: [id], onDelete: Cascade)
+  author        User?          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  guestReviewer GuestReviewer? @relation(fields: [guestReviewerId], references: [id], onDelete: SetNull)
+  replies       CommentReply[]
+}
+
+model CommentReply {
+  id              String   @id @default(cuid())
+  commentId       String
+  authorId        String?
+  guestReviewerId String?
+  body            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  comment       Comment        @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  author        User?          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  guestReviewer GuestReviewer? @relation(fields: [guestReviewerId], references: [id], onDelete: SetNull)
+}
+
+model Approval {
+  id              String         @id @default(cuid())
+  assetVersionId  String
+  reviewerId      String?
+  guestReviewerId String?
+  status          ApprovalStatus @default(PENDING)
+  note            String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  assetVersion  AssetVersion   @relation(fields: [assetVersionId], references: [id], onDelete: Cascade)
+  reviewer      User?          @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+  guestReviewer GuestReviewer? @relation(fields: [guestReviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([assetVersionId, reviewerId])
+  @@unique([assetVersionId, guestReviewerId])
+}
+
+model ShareLink {
+  id             String    @id @default(cuid())
+  projectId      String
+  assetVersionId String?
+  token          String    @unique
+  passwordHash   String?
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assetVersion AssetVersion? @relation(fields: [assetVersionId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}

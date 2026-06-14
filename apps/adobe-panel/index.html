@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenReview Studio</title>
+    <style>
+      :root {
+        --bg: #09090b;
+        --panel: #111113;
+        --panel-2: #18181b;
+        --border: #27272a;
+        --text: #fafafa;
+        --muted: #a1a1aa;
+        --accent: #7c6cf0;
+        --accent-hover: #6b5ce7;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 11px;
+        margin: 4px 0 0;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-top: 10px;
+        padding: 12px;
+      }
+
+      .card-title {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+
+      label {
+        color: var(--muted);
+        display: block;
+        font-size: 11px;
+        margin-top: 8px;
+      }
+
+      input,
+      select {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        margin-top: 4px;
+        padding: 8px 10px;
+        width: 100%;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+
+      button {
+        background: var(--accent);
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+        padding: 8px 12px;
+        width: 100%;
+      }
+
+      button:hover {
+        background: var(--accent-hover);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      button.secondary {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      button.secondary:hover {
+        background: #222226;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .row button {
+        flex: 1;
+      }
+
+      #status {
+        color: var(--muted);
+        font-size: 11px;
+        min-height: 1.2em;
+      }
+
+      .comment {
+        border-top: 1px solid var(--border);
+        margin-top: 8px;
+        padding-top: 8px;
+      }
+
+      .comment strong {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .progress {
+        background: var(--panel-2);
+        border-radius: 999px;
+        height: 4px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+
+      .progress > span {
+        background: var(--accent);
+        display: block;
+        height: 100%;
+        transition: width 0.2s ease;
+        width: 0;
+      }
+
+      .pill {
+        background: rgb(124 108 240 / 0.15);
+        border: 1px solid rgb(124 108 240 / 0.35);
+        border-radius: 999px;
+        color: #c4b5fd;
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 6px;
+        padding: 2px 8px;
+      }
+
+      .header-row {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+      }
+
+      .live-indicator {
+        align-items: center;
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: 10px;
+        font-weight: 600;
+        gap: 4px;
+        padding: 2px 8px;
+      }
+
+      .live-indicator::before {
+        border-radius: 50%;
+        content: "";
+        display: inline-block;
+        height: 6px;
+        width: 6px;
+      }
+
+      .live-indicator.connected {
+        background: rgb(34 197 94 / 0.15);
+        border: 1px solid rgb(34 197 94 / 0.35);
+        color: #86efac;
+      }
+
+      .live-indicator.connected::before {
+        background: #22c55e;
+      }
+
+      .live-indicator.connecting {
+        background: rgb(234 179 8 / 0.15);
+        border: 1px solid rgb(234 179 8 / 0.35);
+        color: #fde68a;
+      }
+
+      .live-indicator.connecting::before {
+        animation: pulse 1.2s infinite;
+        background: #eab308;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+
+      .approval-approved {
+        background: rgb(34 197 94 / 0.15) !important;
+        border-color: rgb(34 197 94 / 0.35) !important;
+        color: #86efac !important;
+      }
+
+      .approval-changes-requested {
+        background: rgb(239 68 68 / 0.15) !important;
+        border-color: rgb(239 68 68 / 0.35) !important;
+        color: #fca5a5 !important;
+      }
+
+      .approval-pending {
+        background: rgb(234 179 8 / 0.15) !important;
+        border-color: rgb(234 179 8 / 0.35) !important;
+        color: #fde68a !important;
+      }
+
+      #toastContainer {
+        position: fixed;
+        top: 8px;
+        left: 12px;
+        right: 12px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        pointer-events: none;
+      }
+
+      .toast {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 11px;
+        line-height: 1.4;
+        padding: 10px 12px;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s, transform 0.3s;
+        pointer-events: auto;
+      }
+
+      .toast-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .toast-exit {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      .toast-error {
+        border-color: rgb(239 68 68 / 0.5);
+        background: rgb(239 68 68 / 0.15);
+        color: #fca5a5;
+      }
+
+      .toast-success {
+        border-color: rgb(34 197 94 / 0.5);
+        background: rgb(34 197 94 / 0.15);
+        color: #86efac;
+      }
+
+      .toast-info {
+        border-color: rgb(124 108 240 / 0.5);
+        background: rgb(124 108 240 / 0.15);
+        color: #c4b5fd;
+      }
+
+      .comment-header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .comment-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .comment-actions button {
+        flex: 1;
+        margin-top: 0;
+      }
+
+      .btn-drawing {
+        background: rgb(124 108 240 / 0.15);
+        border: 1px solid rgb(124 108 240 / 0.35);
+        color: #c4b5fd;
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .btn-drawing:hover {
+        background: rgb(124 108 240 / 0.25);
+      }
+
+      .drawing-toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        margin-bottom: 4px;
+      }
+
+      .drawing-toggle-row label {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .drawing-toggle-row input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+        accent-color: var(--accent);
+      }
+
+      #drawingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 900;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #drawingOverlay .overlay-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 640px;
+        padding: 0 4px 8px;
+      }
+
+      #drawingOverlay .overlay-info {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      #drawingOverlay .overlay-info strong {
+        color: var(--accent);
+      }
+
+      #drawingOverlay .overlay-close {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 16px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #drawingOverlay .overlay-close:hover {
+        background: #333;
+      }
+
+      #drawingOverlay .overlay-canvas-wrap {
+        background: #1a1a1e;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        width: 100%;
+        max-width: 640px;
+        position: relative;
+      }
+
+      #drawingCanvas {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      #drawingOverlay .overlay-body {
+        max-width: 640px;
+        width: 100%;
+        padding: 8px 4px 0;
+        color: var(--text);
+        font-size: 11px;
+        line-height: 1.5;
+        max-height: 60px;
+        overflow-y: auto;
+      }
+
+      .overlay-nav {
+        display: flex;
+        gap: 6px;
+        max-width: 640px;
+        width: 100%;
+        padding: 8px 4px 0;
+      }
+
+      .overlay-nav button {
+        flex: 1;
+        font-size: 11px;
+        padding: 6px 8px;
+        margin: 0;
+      }
+
+      .overlay-zoom-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        max-width: 640px;
+        width: 100%;
+        padding: 8px 4px 0;
+      }
+
+      .overlay-zoom-toolbar button {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        width: 32px;
+        height: 28px;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .overlay-zoom-toolbar button:hover {
+        background: #333;
+        border-color: var(--accent);
+      }
+
+      .overlay-zoom-toolbar .zoom-level {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        min-width: 40px;
+        text-align: center;
+        user-select: none;
+      }
+
+      .overlay-zoom-toolbar .zoom-fit {
+        font-size: 11px;
+        width: auto;
+        padding: 0 10px;
+      }
+
+      #drawingOverlay .overlay-canvas-wrap {
+        cursor: default;
+      }
+
+      #drawingOverlay .overlay-canvas-wrap.zoomed {
+        cursor: grab;
+      }
+
+      #drawingOverlay .overlay-canvas-wrap.zoomed.panning {
+        cursor: grabbing;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toastContainer"></div>
+    <main>
+      <div class="header-row">
+        <h1>OpenReview Studio</h1>
+        <span class="live-indicator connected" id="liveIndicator" hidden>Live</span>
+      </div>
+      <p class="muted">Upload sequences and sync review comments with Premiere.</p>
+
+      <section class="card">
+        <p class="card-title">Account</p>
+        <label>API URL<input id="apiUrl" value="http://localhost:4000" /></label>
+        <div id="signInFields">
+          <label>Email<input id="email" value="demo@openreview.local" /></label>
+          <label>Password<input id="password" type="password" value="openreview-demo" /></label>
+          <button id="login" type="button">Sign in</button>
+        </div>
+        <p class="muted" id="signedInAs" hidden></p>
+        <button id="logout" class="secondary" type="button" hidden>Sign out</button>
+      </section>
+
+      <section class="card">
+        <p class="card-title">Upload for review</p>
+        <label>Project<select id="projectSelect"></select></label>
+        <label>Existing asset (new version)<select id="assetSelect"></select></label>
+        <label>Asset name<input id="assetName" placeholder="Rough cut v1" /></label>
+        <span class="pill" id="sequencePill" hidden>Active sequence</span>
+        <button id="uploadSequence" type="button">Upload active sequence</button>
+        <button class="secondary" id="uploadVersion" type="button">Upload new version to asset</button>
+        <label>Or choose exported file<input id="fileInput" type="file" accept="video/*" /></label>
+        <button class="secondary" id="uploadFile" type="button">Upload selected file</button>
+        <div class="progress" id="progressWrap" hidden><span id="progressBar"></span></div>
+      </section>
+
+      <section class="card">
+        <p class="card-title">Comments</p>
+        <label>Version<select id="versionSelect"></select></label>
+        <span class="pill" id="approvalBadge" hidden>Pending approval</span>
+        <div class="row">
+          <button class="secondary" id="refreshProjects" type="button">Refresh</button>
+          <button class="secondary" id="loadComments" type="button">Load</button>
+          <button id="importMarkers" type="button">Markers</button>
+        </div>
+        <button class="secondary" id="downloadToProject" type="button">Download to project</button>
+        <div class="progress" id="downloadProgressWrap" hidden><span id="downloadProgressBar"></span></div>
+      </section>
+
+      <section class="card" id="status">Not connected.</section>
+      <div class="drawing-toggle-row" id="drawingToggleRow" hidden>
+        <label><input type="checkbox" id="autoShowDrawings" /> Auto-show drawings at playhead</label>
+      </div>
+      <section class="card" id="comments">No comments loaded.</section>
+
+      <div id="drawingOverlay" hidden>
+        <div class="overlay-header">
+          <div class="overlay-info" id="overlayInfo"></div>
+          <button class="overlay-close" id="overlayClose" type="button">&times;</button>
+        </div>
+        <div class="overlay-canvas-wrap">
+          <canvas id="drawingCanvas" width="640" height="360"></canvas>
+        </div>
+        <div class="overlay-zoom-toolbar">
+          <button id="zoomOut" type="button" title="Zoom out">−</button>
+          <span class="zoom-level" id="zoomLevel">100%</span>
+          <button id="zoomIn" type="button" title="Zoom in">+</button>
+          <button class="zoom-fit" id="zoomFit" type="button" title="Reset to fit">Fit</button>
+        </div>
+        <div class="overlay-body" id="overlayBody"></div>
+        <div class="overlay-nav">
+          <button class="secondary" id="overlayPrev" type="button">&larr; Prev</button>
+          <button class="secondary" id="overlayNext" type="button">Next &rarr;</button>
+        </div>
+      </div>
+    </main>
+    <script src="./lib/CSInterface.js"></script>
+    <script src="./dist/panel.js"></script>
+  </body>
+</html>

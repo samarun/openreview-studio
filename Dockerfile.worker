@@ -1,0 +1,60 @@
+# ──────────────────────────────────────────────────────────────
+# Dockerfile.worker — OpenReview Studio BullMQ transcode worker
+# Multi-stage build: deps → build → runner
+# Requires ffmpeg/ffprobe for video processing
+# ──────────────────────────────────────────────────────────────
+
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat openssl ffmpeg
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+
+# ── Stage 1: Install dependencies ────────────────────────────
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/worker/package.json ./apps/worker/
+COPY packages/db/package.json ./packages/db/
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: Build ───────────────────────────────────────────
+FROM deps AS build
+COPY tsconfig.base.json ./
+COPY packages/db ./packages/db
+COPY apps/worker ./apps/worker
+
+RUN pnpm --filter @openreview/db generate
+RUN pnpm --filter @openreview/db build
+RUN pnpm --filter @openreview/worker build
+
+# Rewrite main field so Node.js resolves compiled JS (not .ts source)
+RUN sed -i 's|"main": "src/index.ts"|"main": "dist/index.js"|g' \
+      packages/db/package.json
+
+# ── Stage 3: Production runner ───────────────────────────────
+FROM base AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Workspace scaffolding
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+
+# Root node_modules (includes all deps + generated Prisma client)
+COPY --from=build /app/node_modules ./node_modules
+
+# @openreview/db — compiled output + Prisma schema + per-package modules
+COPY --from=build /app/packages/db/package.json ./packages/db/
+COPY --from=build /app/packages/db/dist ./packages/db/dist
+COPY --from=build /app/packages/db/prisma ./packages/db/prisma
+COPY --from=build /app/packages/db/node_modules ./packages/db/node_modules
+
+# @openreview/worker — compiled output + per-package modules
+COPY --from=build /app/apps/worker/package.json ./apps/worker/
+COPY --from=build /app/apps/worker/dist ./apps/worker/dist
+COPY --from=build /app/apps/worker/node_modules ./apps/worker/node_modules
+
+USER node
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD node -e "setTimeout(()=>process.exit(0),1)" || exit 1
+
+CMD ["node", "apps/worker/dist/index.js"]

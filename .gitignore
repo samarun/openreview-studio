@@ -1,0 +1,18 @@
+node_modules
+.next
+dist
+.turbo
+.env
+.env.local
+packages/db/.env
+coverage
+*.log
+*.tsbuildinfo
+.DS_Store
+tmp
+storage
+.certs
+dist-package
+
+# Pre-built image exports (too large for GitHub)
+docker-images/*.tar

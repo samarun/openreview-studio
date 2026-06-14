@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: openreview
+          POSTGRES_PASSWORD: openreview
+          POSTGRES_DB: openreview
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openreview"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: openreview
+          MINIO_ROOT_PASSWORD: openreview-secret
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        command: server /data --console-address ":9001"
+
+    env:
+      DATABASE_URL: postgresql://openreview:openreview@localhost:5432/openreview
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret-must-be-at-least-32-chars
+      METRICS_ENABLED: "false"
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: openreview
+      S3_SECRET_ACCESS_KEY: openreview-secret
+      S3_BUCKET_ORIGINALS: originals
+      S3_BUCKET_PROXIES: proxies
+      S3_FORCE_PATH_STYLE: "true"
+      WEB_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup MinIO buckets
+        run: |
+          curl -s https://dl.min.io/client/mc/release/linux-amd64/mc -o mc
+          chmod +x mc
+          ./mc alias set local http://localhost:9000 openreview openreview-secret
+          ./mc mb --ignore-existing local/originals local/proxies
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Run migrations
+        run: pnpm db:migrate
+
+      - name: Lint and build
+        run: pnpm build
+
+      - name: Seed database
+        run: pnpm db:seed
+
+      - name: API smoke tests
+        run: |
+          pnpm --filter @openreview/api start &
+          sleep 5
+          node --import tsx --test tests/api-smoke.test.ts tests/health.test.ts
+
+      - name: Seed guard test
+        run: node --import tsx --test tests/seed-guard.test.ts
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: E2E smoke (web + api)
+        run: |
+          pnpm --filter @openreview/web dev &
+          WEB_PID=$!
+          sleep 8
+          pnpm test:e2e
+          kill $WEB_PID || true

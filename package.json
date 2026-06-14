@@ -1,0 +1,28 @@
+{
+  "name": "openreview-studio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open-source video review and Adobe collaboration platform.",
+  "license": "AGPL-3.0-or-later",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @openreview/web --filter @openreview/api --filter @openreview/worker dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test:e2e": "playwright test",
+    "db:generate": "pnpm --filter @openreview/db generate",
+    "db:migrate": "pnpm --filter @openreview/db migrate",
+    "db:seed": "pnpm --filter @openreview/db seed",
+    "infra:up": "docker compose up -d postgres redis minio createbuckets",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.726.1",
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="7.0" ExtensionBundleId="studio.openreview.panel" ExtensionBundleVersion="0.1.0" ExtensionBundleName="OpenReview Studio">
+  <ExtensionList>
+    <Extension Id="studio.openreview.panel" Version="0.1.0" />
+  </ExtensionList>
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="PPRO" Version="[14.0,99.9]" />
+      <Host Name="AEFT" Version="[17.0,99.9]" />
+    </HostList>
+    <LocaleList>
+      <Locale Code="All" />
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="9.0" />
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+  <DispatchInfoList>
+    <Extension Id="studio.openreview.panel">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./index.html</MainPath>
+          <ScriptPath>./host.jsx</ScriptPath>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <CEFCommandLine>
+          <Parameter>--enable-nodejs</Parameter>
+          <Parameter>--mixed-context</Parameter>
+        </CEFCommandLine>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>OpenReview Studio</Menu>
+          <Geometry>
+            <Size>
+              <Width>420</Width>
+              <Height>720</Height>
+            </Size>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

@@ -1,0 +1,292 @@
+# ──────────────────────────────────────────────────────────────
+# docker-compose.production.yml — OpenReview Studio
+#
+# Production deployment stack. Uses non-standard ports to avoid
+# conflicts with host services. All names prefixed "openreview-".
+#
+# Usage:
+#   docker compose -f docker-compose.production.yml --env-file .env.production up -d
+# ──────────────────────────────────────────────────────────────
+
+name: openreview
+
+networks:
+  openreview-internal:
+    name: openreview-internal
+    driver: bridge
+
+volumes:
+  openreview-postgres-data:
+    name: openreview-postgres-data
+  openreview-redis-data:
+    name: openreview-redis-data
+  openreview-minio-data:
+    name: openreview-minio-data
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────
+  # Primary data store. Exposed on port 5433 to avoid host conflicts.
+  openreview-postgres:
+    image: postgres:16-alpine
+    container_name: openreview-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-openreview}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-openreview}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - openreview-postgres-data:/var/lib/postgresql/data
+    networks:
+      - openreview-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openreview}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Redis ────────────────────────────────────────────────────
+  # Used by BullMQ job queues and pub/sub for real-time events.
+  # Exposed on port 6380 to avoid host conflicts.
+  openreview-redis:
+    image: redis:7-alpine
+    container_name: openreview-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy noeviction
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - openreview-redis-data:/data
+    networks:
+      - openreview-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── MinIO (S3-compatible object storage) ─────────────────────
+  # Stores original uploads and transcoded proxy files.
+  # API on 9002, Console on 9003 to avoid host conflicts.
+  openreview-minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: openreview-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-openreview}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    ports:
+      - "${MINIO_API_PORT:-9002}:9000"
+      - "${MINIO_CONSOLE_PORT:-9003}:9001"
+    volumes:
+      - openreview-minio-data:/data
+    networks:
+      - openreview-internal
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── MinIO bucket initialisation (run-once) ──────────────────
+  openreview-createbuckets:
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    container_name: openreview-createbuckets
+    restart: "no"
+    depends_on:
+      openreview-minio:
+        condition: service_healthy
+    networks:
+      - openreview-internal
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://openreview-minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do sleep 1; done;
+      mc mb -p local/$${S3_BUCKET_ORIGINALS};
+      mc mb -p local/$${S3_BUCKET_PROXIES};
+      exit 0;
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-openreview}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_BUCKET_ORIGINALS: ${S3_BUCKET_ORIGINALS:-originals}
+      S3_BUCKET_PROXIES: ${S3_BUCKET_PROXIES:-proxies}
+
+  # ── API server (Fastify) ─────────────────────────────────────
+  # Handles all REST/WebSocket endpoints. Exposed on port 4000.
+  openreview-api:
+    image: openreview-api:latest
+    container_name: openreview-api
+    restart: unless-stopped
+    depends_on:
+      openreview-postgres:
+        condition: service_healthy
+      openreview-redis:
+        condition: service_healthy
+      openreview-minio:
+        condition: service_healthy
+      openreview-createbuckets:
+        condition: service_completed_successfully
+      openreview-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${API_PORT:-4000}:4000"
+    networks:
+      - openreview-internal
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      HOST: "0.0.0.0"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-openreview}:${POSTGRES_PASSWORD}@openreview-postgres:5432/${POSTGRES_DB:-openreview}
+      REDIS_URL: redis://openreview-redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required (min 32 chars)}
+      S3_ENDPOINT: http://openreview-minio:9000
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-openreview}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_BUCKET_ORIGINALS: ${S3_BUCKET_ORIGINALS:-originals}
+      S3_BUCKET_PROXIES: ${S3_BUCKET_PROXIES:-proxies}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_FORCE_PATH_STYLE: "true"
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-}
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://studio.arunsamuel.com}
+      MAIL_FROM: ${MAIL_FROM:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 15s
+      timeout: 10s
+      start_period: 120s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ── Web app (Next.js) ────────────────────────────────────────
+  # Frontend served via Next.js standalone server. Exposed on port 3000.
+  # NEXT_PUBLIC_API_URL is baked in at build time via the build arg.
+  openreview-web:
+    image: openreview-web:latest
+    container_name: openreview-web
+    restart: unless-stopped
+    depends_on:
+      openreview-api:
+        condition: service_started
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    networks:
+      - openreview-internal
+    environment:
+      NODE_ENV: production
+      API_URL: http://openreview-api:4000
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ── Worker (BullMQ transcode) ────────────────────────────────
+  # Processes video transcode jobs (ffmpeg). No port exposed.
+  openreview-worker:
+    image: openreview-worker:latest
+    container_name: openreview-worker
+    restart: unless-stopped
+    depends_on:
+      openreview-postgres:
+        condition: service_healthy
+      openreview-redis:
+        condition: service_healthy
+      openreview-minio:
+        condition: service_healthy
+      openreview-createbuckets:
+        condition: service_completed_successfully
+    networks:
+      - openreview-internal
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-openreview}:${POSTGRES_PASSWORD}@openreview-postgres:5432/${POSTGRES_DB:-openreview}
+      REDIS_URL: redis://openreview-redis:6379
+      S3_ENDPOINT: http://openreview-minio:9000
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-openreview}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_BUCKET_ORIGINALS: ${S3_BUCKET_ORIGINALS:-originals}
+      S3_BUCKET_PROXIES: ${S3_BUCKET_PROXIES:-proxies}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_FORCE_PATH_STYLE: "true"
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ── Database migrations (run-once) ──────────────────────────
+  # Applies Prisma migrations then exits. Runs before the API starts.
+  openreview-migrate:
+    image: openreview-api:latest
+    container_name: openreview-migrate
+    restart: "no"
+    depends_on:
+      openreview-postgres:
+        condition: service_healthy
+    networks:
+      - openreview-internal
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-openreview}:${POSTGRES_PASSWORD}@openreview-postgres:5432/${POSTGRES_DB:-openreview}
+    command: ["npx", "prisma@6", "migrate", "deploy", "--schema", "packages/db/prisma/schema.prisma"]

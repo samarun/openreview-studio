@@ -1,0 +1,36 @@
+{
+  "name": "@openreview/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/jwt": "^9.0.2",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/rate-limit": "^10.3.0",
+    "@aws-sdk/client-s3": "^3.726.1",
+    "@aws-sdk/s3-request-presigner": "^3.726.1",
+    "@openreview/db": "workspace:*",
+    "@openreview/shared": "workspace:*",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.34.2",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.4.2",
+    "nodemailer": "^6.9.16",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^6.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

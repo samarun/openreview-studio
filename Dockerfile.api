@@ -1,0 +1,68 @@
+# ──────────────────────────────────────────────────────────────
+# Dockerfile.api — OpenReview Studio API server (Fastify)
+# Multi-stage build: deps → build → runner
+# ──────────────────────────────────────────────────────────────
+
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat openssl ffmpeg
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+
+# ── Stage 1: Install dependencies ────────────────────────────
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/db/package.json ./packages/db/
+COPY packages/shared/package.json ./packages/shared/
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: Build ───────────────────────────────────────────
+FROM deps AS build
+COPY tsconfig.base.json ./
+COPY packages/db ./packages/db
+COPY packages/shared ./packages/shared
+COPY apps/api ./apps/api
+
+RUN pnpm --filter @openreview/db generate
+RUN pnpm --filter @openreview/db build
+RUN pnpm --filter @openreview/shared build
+RUN pnpm --filter @openreview/api build
+
+# Rewrite main fields so Node.js resolves compiled JS (not .ts sources)
+RUN sed -i 's|"main": "src/index.ts"|"main": "dist/index.js"|g' \
+      packages/db/package.json packages/shared/package.json
+
+# ── Stage 3: Production runner ───────────────────────────────
+FROM base AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Workspace scaffolding
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+
+# Root node_modules (includes all deps + generated Prisma client)
+COPY --from=build /app/node_modules ./node_modules
+
+# @openreview/db — compiled output + Prisma schema + per-package modules
+COPY --from=build /app/packages/db/package.json ./packages/db/
+COPY --from=build /app/packages/db/dist ./packages/db/dist
+COPY --from=build /app/packages/db/prisma ./packages/db/prisma
+COPY --from=build /app/packages/db/node_modules ./packages/db/node_modules
+
+# @openreview/shared — compiled output + per-package modules
+COPY --from=build /app/packages/shared/package.json ./packages/shared/
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+COPY --from=build /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# @openreview/api — compiled output + per-package modules
+COPY --from=build /app/apps/api/package.json ./apps/api/
+COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
+
+USER node
+EXPOSE 4000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:4000/health || exit 1
+
+CMD ["node", "apps/api/dist/index.js"]
