@@ -58,9 +58,9 @@ export function AssetGridCard({
             {latestVersion ? `v${latestVersion.versionNumber}` : "No version"}
           </span>
         </div>
-        <div className="p-3">
-          <h4 className="truncate font-medium text-frame-text">{asset.name}</h4>
-          <p className="mt-1 text-xs text-frame-muted">
+        <div className="p-2.5 sm:p-3">
+          <h4 className="truncate text-sm font-medium text-frame-text sm:text-base">{asset.name}</h4>
+          <p className="mt-0.5 text-[11px] text-frame-muted sm:mt-1 sm:text-xs">
             {asset.versions.length} version{asset.versions.length === 1 ? "" : "s"}
             {latestVersion ? ` · ${latestVersion.status}` : ""}
           </p>

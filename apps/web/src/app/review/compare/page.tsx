@@ -271,41 +271,43 @@ function CompareContent({ token }: { token: string }) {
 
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-frame-border pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-frame-muted">Side-by-side compare</p>
-          <h1 className="mt-1 text-2xl font-semibold text-frame-text">{asset?.name ?? "Loading…"}</h1>
-          <p className="mt-1 text-sm text-frame-muted">
-            {syncEnabled
-              ? "Play from the left player — both videos stay in sync."
-              : "Each player is independent."}
-          </p>
-          {left && right ? (
-            <p className="mt-1 text-xs text-frame-muted">
-              Durations: v{left.versionNumber} {left.durationSeconds ? formatDuration(left.durationSeconds) : "—"} · v
-              {right.versionNumber} {right.durationSeconds ? formatDuration(right.durationSeconds) : "—"}
-              {syncEnabled && leftDuration > 0 && rightDuration > 0 ? ` · Sync window ${formatDuration(syncDuration)}` : ""}
+      <header className="mb-4 border-b border-frame-border pb-4 sm:mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-frame-muted">Side-by-side compare</p>
+            <h1 className="mt-1 text-xl font-semibold text-frame-text sm:text-2xl">{asset?.name ?? "Loading…"}</h1>
+            <p className="mt-1 hidden text-sm text-frame-muted sm:block">
+              {syncEnabled
+                ? "Play from the left player — both videos stay in sync."
+                : "Each player is independent."}
             </p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${syncEnabled ? "bg-frame-accent text-white" : "frame-btn-secondary"}`}
-            onClick={() => setSyncEnabled((value) => !value)}
-            type="button"
-          >
-            {syncEnabled ? "Synced" : "Independent"}
-          </button>
-          {syncEnabled ? (
-            <button className="frame-btn-secondary" onClick={resetSync} type="button">
-              Reset to start
+            {left && right ? (
+              <p className="mt-1 hidden text-xs text-frame-muted md:block">
+                Durations: v{left.versionNumber} {left.durationSeconds ? formatDuration(left.durationSeconds) : "—"} · v
+                {right.versionNumber} {right.durationSeconds ? formatDuration(right.durationSeconds) : "—"}
+                {syncEnabled && leftDuration > 0 && rightDuration > 0 ? ` · Sync window ${formatDuration(syncDuration)}` : ""}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              className={`rounded-lg px-3 py-2 text-sm font-medium sm:px-4 ${syncEnabled ? "bg-frame-accent text-white" : "frame-btn-secondary"}`}
+              onClick={() => setSyncEnabled((value) => !value)}
+              type="button"
+            >
+              {syncEnabled ? "Synced" : "Independent"}
             </button>
-          ) : null}
-          {asset ? (
-            <Link className="frame-btn-secondary" href={`/assets/${asset.id}`}>
-              Back to asset
-            </Link>
-          ) : null}
+            {syncEnabled ? (
+              <button className="frame-btn-secondary !px-3 text-xs sm:text-sm" onClick={resetSync} type="button">
+                Reset
+              </button>
+            ) : null}
+            {asset ? (
+              <Link className="frame-btn-secondary !px-3 text-xs sm:text-sm" href={`/assets/${asset.id}`}>
+                Back
+              </Link>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -313,9 +315,9 @@ function CompareContent({ token }: { token: string }) {
         <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">{message}</p>
       ) : null}
 
-      <div className="flex flex-1 gap-4">
+      <div className="flex flex-1 flex-col gap-4 xl:flex-row">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="grid flex-1 gap-4 lg:grid-cols-2">
+          <div className="grid flex-1 gap-3 sm:gap-4 lg:grid-cols-2">
             {left ? (
               <div className="frame-panel flex flex-col overflow-hidden p-0">
                 <p className="border-b border-frame-border px-4 py-2 text-sm text-frame-muted">
@@ -403,7 +405,7 @@ function CompareContent({ token }: { token: string }) {
 
         {/* Comments sidebar */}
         {left && right ? (
-          <aside className="hidden w-80 shrink-0 flex-col overflow-hidden rounded-lg border border-frame-border bg-frame-panel xl:flex">
+          <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border border-frame-border bg-frame-panel xl:w-80">
             <div className="flex items-center justify-between border-b border-frame-border px-4 py-3">
               <span className="text-xs font-semibold uppercase tracking-wide text-frame-muted">Comments</span>
               <span className="text-[11px] text-frame-muted">

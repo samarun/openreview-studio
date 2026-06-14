@@ -185,7 +185,7 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
         </p>
       ) : null}
 
-      <div className="grid flex-1 gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid flex-1 gap-6 md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_340px]">
         <section className="flex min-w-0 flex-col">
           <div className="frame-panel overflow-hidden bg-black p-0">
             {previewVersion && (previewVersion.proxyKey || previewVersion.hlsManifestKey) ? (
@@ -214,11 +214,11 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
               Watch two versions next to each other with synced playback and comment overlays.
             </p>
             {sortedVersions.length >= 2 ? (
-              <div className="mt-4 flex flex-wrap items-end gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
                 <label className="text-xs text-frame-muted">
                   Left
                   <select
-                    className="frame-input mt-1 min-w-[120px]"
+                    className="frame-input mt-1"
                     value={compareLeft}
                     onChange={(event) => setCompareLeft(event.target.value)}
                   >
@@ -233,7 +233,7 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
                 <label className="text-xs text-frame-muted">
                   Right
                   <select
-                    className="frame-input mt-1 min-w-[120px]"
+                    className="frame-input mt-1"
                     value={compareRight}
                     onChange={(event) => setCompareRight(event.target.value)}
                   >
@@ -246,7 +246,7 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
                   </select>
                 </label>
                 <Link
-                  className="frame-btn-secondary"
+                  className="frame-btn-secondary col-span-2 text-center sm:col-span-1"
                   href={compareLeft && compareRight ? `/review/compare?left=${compareLeft}&right=${compareRight}` : "#"}
                   onClick={(event) => {
                     if (!compareLeft || !compareRight) event.preventDefault();

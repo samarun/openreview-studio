@@ -328,10 +328,10 @@ export function PublicShareReview({ token }: { token: string }) {
 
   if (passwordRequired) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-frame-bg px-5 text-frame-text">
-        <form className="w-full max-w-md frame-panel p-6" onSubmit={submitPassword}>
-          <h1 className="text-2xl font-semibold">Protected review link</h1>
-          <p className="mt-2 text-sm text-frame-muted">Enter the password provided by the review owner.</p>
+      <main className="flex min-h-screen items-center justify-center bg-frame-bg px-4 text-frame-text sm:px-5">
+        <form className="w-full max-w-md frame-panel p-4 sm:p-6" onSubmit={submitPassword}>
+          <h1 className="text-xl font-semibold sm:text-2xl">Protected review link</h1>
+          <p className="mt-1.5 text-xs text-frame-muted sm:mt-2 sm:text-sm">Enter the password provided by the review owner.</p>
           <input className="frame-input mt-5" type="password" value={sharePassword} onChange={(event) => setSharePassword(event.target.value)} />
           <button className="frame-btn-primary mt-4 w-full" disabled={loading || !sharePassword} type="submit">
             Unlock review
@@ -355,42 +355,47 @@ export function PublicShareReview({ token }: { token: string }) {
   return (
     <main className="flex min-h-screen flex-col bg-frame-bg text-frame-text">
       <header
-        className="flex h-14 shrink-0 items-center border-b border-frame-border bg-frame-panel px-4"
+        className="shrink-0 border-b border-frame-border bg-frame-panel"
         style={share.project.organization.brandColor ? { borderBottomColor: share.project.organization.brandColor } : undefined}
       >
-        {share.project.organization.logoUrl ? (
-          <img alt="" className="mr-3 h-8 object-contain" src={share.project.organization.logoUrl} />
-        ) : null}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-sm font-semibold">{asset.name}</h1>
-          <p className="truncate text-xs text-frame-muted">
-            {share.project.organization.name} · {share.project.name} · v{version.versionNumber}
-          </p>
+        <div className="flex h-10 items-center px-2 sm:h-14 sm:px-4">
+          {share.project.organization.logoUrl ? (
+            <img alt="" className="mr-2 h-6 shrink-0 object-contain sm:mr-3 sm:h-8" src={share.project.organization.logoUrl} />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xs font-semibold sm:text-sm">{asset.name}</h1>
+            <p className="hidden truncate text-xs text-frame-muted sm:block">
+              {share.project.organization.name} · {share.project.name} · v{version.versionNumber}
+            </p>
+          </div>
+          <span className="mr-2 hidden rounded-full border border-frame-border bg-frame-panel-elevated px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-frame-muted sm:inline">
+            {approvalLabel(reviewStatus)}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              className="frame-btn-secondary !min-h-0 !px-2 !py-1 text-[11px] sm:!px-3 sm:!py-1.5 sm:text-xs"
+              onClick={() => void navigator.clipboard.writeText(sharePageUrl)}
+              type="button"
+            >
+              <span className="hidden sm:inline">Copy link</span>
+              <span className="sm:hidden">Copy</span>
+            </button>
+            {reviewStatus === "APPROVED" ? (
+              <button className="frame-btn-primary !min-h-0 !px-2 !py-1 text-[11px] sm:!px-3 sm:!py-1.5 sm:text-xs" disabled={loading} onClick={() => void downloadProxy()} type="button">
+                Download
+              </button>
+            ) : null}
+          </div>
         </div>
-        <span className="mr-2 rounded-full border border-frame-border bg-frame-panel-elevated px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-frame-muted">
-          {approvalLabel(reviewStatus)}
-        </span>
-        <button
-          className="frame-btn-secondary !py-1.5 text-xs"
-          onClick={() => void navigator.clipboard.writeText(sharePageUrl)}
-          type="button"
-        >
-          Copy link
-        </button>
-        {reviewStatus === "APPROVED" ? (
-          <button className="frame-btn-primary !py-1.5 text-xs" disabled={loading} onClick={() => void downloadProxy()} type="button">
-            Download
-          </button>
-        ) : null}
       </header>
 
       {message ? (
         <p className="border-b border-frame-accent/20 bg-frame-accent/10 px-4 py-2 text-center text-sm text-indigo-100">{message}</p>
       ) : null}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="frame-review-layout">
           <section className="flex min-w-0 flex-1 flex-col bg-black">
-            <div className="relative flex flex-1 overflow-hidden" ref={videoContainerRef}>
+            <div className="relative flex aspect-video min-h-0 overflow-hidden md:aspect-auto md:flex-1" ref={videoContainerRef}>
               <ReviewPlayer
                 authQuery={accessQuery().replace(/^\?/, "")}
                 mediaBasePath={`/media/share/${token}/proxies`}
@@ -446,26 +451,27 @@ export function PublicShareReview({ token }: { token: string }) {
           </section>
 
           <aside className="frame-review-sidebar overflow-y-auto">
-            <div className="border-b border-frame-border p-4">
-              <h2 className="text-sm font-semibold">Review decision</h2>
-              <p className="mt-1 text-xs text-frame-muted">Approve or request changes</p>
+            <div className="border-b border-frame-border p-3 sm:p-4">
+              <h2 className="text-xs font-semibold sm:text-sm">Review decision</h2>
+              <p className="mt-0.5 text-[11px] text-frame-muted sm:mt-1 sm:text-xs">Approve or request changes</p>
               <textarea
-                className="frame-input mt-3 min-h-16"
+                className="frame-input mt-2 min-h-12 text-xs sm:mt-3 sm:min-h-16 sm:text-sm"
                 placeholder="Decision note optional"
                 value={approvalNote}
                 onChange={(event) => setApprovalNote(event.target.value)}
               />
-              <div className="mt-3 flex gap-2">
+              <div className="mt-2 flex gap-1.5 sm:mt-3 sm:gap-2">
                 <button
-                  className="flex-1 rounded-xl border border-amber-300/30 px-4 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-300/10 disabled:opacity-60"
+                  className="flex-1 rounded-lg border border-amber-300/30 px-2 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-300/10 disabled:opacity-60 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm"
                   disabled={loading || !name.trim()}
                   onClick={() => submitApproval("CHANGES_REQUESTED")}
                   type="button"
                 >
-                  Request changes
+                  <span className="hidden sm:inline">Request changes</span>
+                  <span className="sm:hidden">Changes</span>
                 </button>
                 <button
-                  className="flex-1 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:opacity-60"
+                  className="flex-1 rounded-lg bg-emerald-300 px-2 py-2 text-xs font-semibold text-emerald-950 hover:bg-emerald-200 disabled:opacity-60 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm"
                   disabled={loading || !name.trim()}
                   onClick={() => submitApproval("APPROVED")}
                   type="button"
@@ -475,29 +481,29 @@ export function PublicShareReview({ token }: { token: string }) {
               </div>
             </div>
 
-            <h2 className="text-xl font-semibold">Add feedback</h2>
-            <form className="mt-4 space-y-3" onSubmit={submitComment}>
-              <label className="block text-sm text-slate-300">
+            <h2 className="px-3 pt-3 text-base font-semibold sm:px-4 sm:pt-4 sm:text-xl">Add feedback</h2>
+            <form className="mt-2 space-y-2 px-3 sm:mt-4 sm:space-y-3 sm:px-4" onSubmit={submitComment}>
+              <label className="block text-xs text-slate-300 sm:text-sm">
                 Name
                 <input
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-cyan-300 focus:ring-2 sm:mt-2 sm:rounded-xl sm:px-4 sm:py-3"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
               </label>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-xs text-slate-300 sm:text-sm">
                 Email optional
                 <input
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-cyan-300 focus:ring-2 sm:mt-2 sm:rounded-xl sm:px-4 sm:py-3"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-xs text-slate-300 sm:text-sm">
                 Time seconds
                 <input
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-cyan-300 focus:ring-2 sm:mt-2 sm:rounded-xl sm:px-4 sm:py-3"
                   min="0"
                   step="0.01"
                   type="number"
@@ -505,16 +511,16 @@ export function PublicShareReview({ token }: { token: string }) {
                   onChange={(event) => setTimeSeconds(event.target.value)}
                 />
               </label>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-xs text-slate-300 sm:text-sm">
                 Comment
                 <textarea
-                  className="mt-2 min-h-24 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+                  className="mt-1 min-h-16 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-cyan-300 focus:ring-2 sm:mt-2 sm:min-h-24 sm:rounded-xl sm:px-4 sm:py-3"
                   value={body}
                   onChange={(event) => setBody(event.target.value)}
                 />
               </label>
               <button
-                className="w-full rounded-xl bg-cyan-300 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60"
+                className="w-full rounded-lg bg-cyan-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60 sm:rounded-xl sm:px-4 sm:py-3"
                 disabled={loading || !name.trim() || !body.trim()}
                 type="submit"
               >
@@ -522,7 +528,7 @@ export function PublicShareReview({ token }: { token: string }) {
               </button>
             </form>
 
-            <div className="mt-6">
+            <div className="mt-6 px-3 pb-4 sm:px-4">
               <CommentList
                 activeAnnotationCommentId={pinnedCommentId}
                 canReply

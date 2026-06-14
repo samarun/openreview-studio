@@ -456,7 +456,7 @@ export function ReviewPanel({
 
   const shellClass = presenterMode
     ? "fixed inset-0 z-50 flex flex-col bg-frame-bg text-frame-text"
-    : "flex h-screen flex-col overflow-hidden bg-frame-bg text-frame-text";
+    : "flex min-h-screen flex-col bg-frame-bg text-frame-text md:h-screen md:overflow-hidden";
 
   return (
     <div className={shellClass}>
@@ -509,7 +509,7 @@ export function ReviewPanel({
         <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-black">
           {version.proxyKey || version.hlsManifestKey ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="relative flex min-h-0 flex-1 overflow-hidden bg-black">
+              <div className="relative flex aspect-video min-h-0 overflow-hidden bg-black md:aspect-auto md:flex-1">
                 <ReviewPlayer
                   authQuery={`token=${encodeURIComponent(token)}`}
                   layout="fill"
@@ -576,74 +576,74 @@ export function ReviewPanel({
 
         {!presenterMode ? (
           <aside className="frame-review-sidebar shrink-0">
-            <div className="border-b border-frame-border p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-frame-muted">Review status</h3>
+            <div className="border-b border-frame-border p-3 sm:p-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-frame-muted sm:text-xs">Review status</h3>
               <textarea
-                className="frame-input mt-2 min-h-14"
+                className="frame-input mt-1.5 min-h-12 text-xs sm:mt-2 sm:min-h-14 sm:text-sm"
                 placeholder="Decision note (optional)"
                 value={approvalNote}
                 onChange={(event) => setApprovalNote(event.target.value)}
               />
             </div>
 
-            <div className="flex items-center justify-between border-b border-frame-border px-4 py-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-frame-muted">Comments</span>
-              <button className="text-xs text-frame-accent hover:underline" onClick={() => loadComments()} type="button">
+            <div className="flex items-center justify-between border-b border-frame-border px-3 py-1.5 sm:px-4 sm:py-2">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-frame-muted sm:text-xs">Comments</span>
+              <button className="text-[11px] text-frame-accent hover:underline sm:text-xs" onClick={() => loadComments()} type="button">
                 Refresh
               </button>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            <div className="flex-1 space-y-2 overflow-y-auto p-3 sm:space-y-3 sm:p-4">
               {comments.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-frame-border p-6 text-center text-sm text-frame-muted">
+                <p className="rounded-lg border border-dashed border-frame-border p-4 text-center text-xs text-frame-muted sm:p-6 sm:text-sm">
                   No comments yet. Draw on the frame or add feedback at the current time.
                 </p>
               ) : null}
               {comments.map((comment) => (
                 <article
-                  className={`rounded-lg border p-3 ${comment.resolvedAt ? "border-emerald-500/30 bg-emerald-500/5" : "border-frame-border bg-frame-panel-elevated"}`}
+                  className={`rounded-lg border p-2.5 sm:p-3 ${comment.resolvedAt ? "border-emerald-500/30 bg-emerald-500/5" : "border-frame-border bg-frame-panel-elevated"}`}
                   key={comment.id}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <button className="frame-time-pill" onClick={() => jumpToTime(comment.timeSeconds)} type="button">
+                  <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                    <button className="frame-time-pill text-[11px] sm:text-xs" onClick={() => jumpToTime(comment.timeSeconds)} type="button">
                       {formatTimestamp(comment.timeSeconds)}
                     </button>
-                    <span className="truncate text-xs text-frame-muted">{commentAuthor(comment)}</span>
+                    <span className="truncate text-[11px] text-frame-muted sm:text-xs">{commentAuthor(comment)}</span>
                   </div>
-                  <p className="mt-2 text-sm text-frame-text">{comment.body}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <p className="mt-1.5 text-xs text-frame-text sm:mt-2 sm:text-sm">{comment.body}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 sm:mt-2 sm:gap-2">
                     {comment.annotationJson ? (
                       <button
-                        className={`text-xs hover:underline ${pinnedCommentId === comment.id ? "font-semibold text-frame-text" : "text-frame-accent"}`}
+                        className={`text-[11px] hover:underline sm:text-xs ${pinnedCommentId === comment.id ? "font-semibold text-frame-text" : "text-frame-accent"}`}
                         onClick={() => toggleAnnotationComment(comment)}
                         type="button"
                       >
                         {pinnedCommentId === comment.id ? "Hide drawing" : "Show drawing"}
                       </button>
                     ) : null}
-                    <button className="text-xs text-frame-muted hover:text-frame-text" disabled={loading} onClick={() => toggleResolved(comment)} type="button">
+                    <button className="text-[11px] text-frame-muted hover:text-frame-text sm:text-xs" disabled={loading} onClick={() => toggleResolved(comment)} type="button">
                       {comment.resolvedAt ? "Reopen" : "Mark complete"}
                     </button>
                   </div>
                   {comment.replies.length > 0 ? (
-                    <div className="mt-3 space-y-2 border-l border-frame-border pl-3">
+                    <div className="mt-2 space-y-1.5 border-l border-frame-border pl-2 sm:mt-3 sm:space-y-2 sm:pl-3">
                       {comment.replies.map((reply) => (
-                        <div className="text-xs" key={reply.id}>
+                        <div className="text-[11px] sm:text-xs" key={reply.id}>
                           <p className="text-frame-muted">{reply.author?.name || reply.guestReviewer?.name || "Guest"}</p>
-                          <p className="mt-1 text-frame-text">{reply.body}</p>
+                          <p className="mt-0.5 text-frame-text sm:mt-1">{reply.body}</p>
                         </div>
                       ))}
                     </div>
                   ) : null}
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-1.5 flex gap-1.5 sm:mt-2 sm:gap-2">
                     <input
-                      className="frame-input min-w-0 flex-1 !py-1.5 text-xs"
+                      className="frame-input min-w-0 flex-1 !py-1 text-[11px] sm:!py-1.5 sm:text-xs"
                       placeholder="Reply"
                       value={replyBodies[comment.id] ?? ""}
                       onChange={(event) => setReplyBodies((current) => ({ ...current, [comment.id]: event.target.value }))}
                     />
                     <button
-                      className="frame-btn-primary !px-2 !py-1.5 text-xs"
+                      className="frame-btn-primary !px-2 !py-1 text-[11px] sm:!py-1.5 sm:text-xs"
                       disabled={loading || !(replyBodies[comment.id] ?? "").trim()}
                       onClick={() => submitReply(comment.id)}
                       type="button"
@@ -655,21 +655,21 @@ export function ReviewPanel({
               ))}
             </div>
 
-            <form className="space-y-3 border-t border-frame-border bg-frame-panel-elevated p-4" onSubmit={handleCreateComment}>
-              <div className="flex items-center justify-between text-xs text-frame-muted">
-                <span className="frame-time-pill">@{formatTimestamp(Number(commentTimeSeconds) || 0)}</span>
+            <form className="space-y-2 border-t border-frame-border bg-frame-panel-elevated p-3 sm:space-y-3 sm:p-4" onSubmit={handleCreateComment}>
+              <div className="flex items-center justify-between text-[11px] text-frame-muted sm:text-xs">
+                <span className="frame-time-pill text-[11px] sm:text-xs">@{formatTimestamp(Number(commentTimeSeconds) || 0)}</span>
                 <button className="text-frame-accent hover:underline" onClick={useCurrentVideoTime} type="button">
                   Use playhead
                 </button>
               </div>
               <textarea
-                className="frame-input min-h-20"
+                className="frame-input min-h-16 text-xs sm:min-h-20 sm:text-sm"
                 placeholder="Leave a comment at this time…"
                 value={commentBody}
                 onChange={(event) => setCommentBody(event.target.value)}
               />
               <input className="sr-only" min="0" step="0.01" type="number" value={commentTimeSeconds} onChange={(event) => setCommentTimeSeconds(event.target.value)} />
-              <button className="frame-btn-primary w-full" disabled={loading || !commentBody.trim()} type="submit">
+              <button className="frame-btn-primary w-full text-xs sm:text-sm" disabled={loading || !commentBody.trim()} type="submit">
                 Add comment
               </button>
             </form>

@@ -43,11 +43,20 @@ body {
   .frame-btn-primary {
     border-radius: 0.5rem;
     background-color: var(--frame-accent);
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #fff;
     transition: background-color 0.15s ease;
+    min-height: 2.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .frame-btn-primary {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      min-height: unset;
+    }
   }
 
   .frame-btn-primary:hover {
@@ -62,11 +71,20 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--frame-border);
     background-color: var(--frame-panel-elevated);
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--frame-text);
     transition: background-color 0.15s ease;
+    min-height: 2.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .frame-btn-secondary {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      min-height: unset;
+    }
   }
 
   .frame-btn-secondary:hover {
@@ -109,19 +127,41 @@ body {
 
   .frame-review-layout {
     display: flex;
+    flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
+  }
+
+  @media (min-width: 768px) {
+    .frame-review-layout {
+      flex-direction: row;
+      overflow: hidden;
+    }
   }
 
   .frame-review-sidebar {
     display: flex;
-    width: 22rem;
+    width: 100%;
     flex-shrink: 0;
     flex-direction: column;
     min-height: 0;
-    border-left: 1px solid var(--frame-border);
+    border-top: 1px solid var(--frame-border);
     background: var(--frame-panel);
+  }
+
+  @media (min-width: 768px) {
+    .frame-review-sidebar {
+      width: 20rem;
+      border-top: none;
+      border-left: 1px solid var(--frame-border);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .frame-review-sidebar {
+      width: 22rem;
+    }
   }
 }
 

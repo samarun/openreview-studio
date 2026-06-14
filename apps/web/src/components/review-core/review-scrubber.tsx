@@ -55,13 +55,13 @@ export function ReviewScrubber({ durationSeconds, currentTime, comments, onSeek,
   const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
   return (
-    <div className="relative z-20 border-t border-frame-border bg-frame-panel px-4 py-3">
-      <div className="mb-2 flex items-center justify-between text-[11px] text-frame-muted">
+    <div className="relative z-20 border-t border-frame-border bg-frame-panel px-2 py-2 sm:px-4 sm:py-3">
+      <div className="mb-1 flex items-center justify-between text-[10px] text-frame-muted sm:mb-2 sm:text-[11px]">
         <span>{formatTimestamp(currentTime)}</span>
         <span>{formatTimestamp(duration)}</span>
       </div>
       <div
-        className="relative h-8 cursor-pointer touch-none select-none"
+        className="relative h-6 cursor-pointer touch-none select-none sm:h-8"
         onPointerDown={handleTrackPointerDown}
         ref={trackRef}
         role="slider"

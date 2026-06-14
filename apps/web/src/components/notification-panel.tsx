@@ -68,7 +68,7 @@ export function NotificationPanel({ token, onClose }: { token: string; onClose: 
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-lg border border-frame-border bg-frame-panel shadow-frame">
+    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-frame-border bg-frame-panel shadow-frame sm:left-auto sm:w-80">
       <div className="flex items-center justify-between border-b border-frame-border px-3 py-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-frame-muted">Notifications</p>
         <div className="flex gap-2">

@@ -38,17 +38,17 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="min-h-screen bg-frame-bg px-6 py-10 text-frame-text">
-      <section className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+    <main className="min-h-screen bg-frame-bg px-4 py-8 text-frame-text sm:px-6 sm:py-10">
+      <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10">
         <div>
           <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-frame-accent">OpenReview Studio</p>
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Video review for production teams</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">Video review for production teams</h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-frame-muted">
             Upload cuts, share review links, collect timestamped feedback, and approve versions.
           </p>
         </div>
 
-        <div className="frame-panel p-6 shadow-frame">
+        <div className="frame-panel p-4 shadow-frame sm:p-6">
           <div className="mb-6 grid grid-cols-2 rounded-lg bg-frame-panel-elevated p-1">
             <a
               className={`rounded-md px-4 py-2.5 text-center text-sm font-medium ${mode === "login" ? "bg-frame-accent text-white" : "text-frame-muted"}`}

@@ -62,7 +62,7 @@ function SetPasswordForm() {
 
 export default function SetPasswordPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#08090f] px-5 text-slate-100">
+    <main className="flex min-h-screen items-center justify-center bg-[#08090f] px-4 text-slate-100 sm:px-5">
       <Suspense fallback={<p className="text-slate-400">Loading invite...</p>}>
         <SetPasswordForm />
       </Suspense>

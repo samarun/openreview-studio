@@ -198,16 +198,16 @@ export function SettingsPanel({ token, user }: { token: string; user: User }) {
 
   return (
     <div>
-      <header className="mb-8">
+      <header className="mb-6 sm:mb-8">
         <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Administration</p>
-        <h2 className="mt-2 text-3xl font-semibold">Settings</h2>
-        <p className="mt-1 text-slate-400">Workspace settings and organization details.</p>
+        <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">Settings</h2>
+        <p className="mt-1 text-sm text-slate-400 sm:text-base">Workspace settings and organization details.</p>
       </header>
 
       {message ? <p className="mb-6 rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100">{message}</p> : null}
 
-      <section className="mb-6 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-        <h3 className="text-xl font-semibold">Share page branding</h3>
+      <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:rounded-3xl sm:p-5">
+        <h3 className="text-lg font-semibold sm:text-xl">Share page branding</h3>
         <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={updateBranding}>
           <label className="block text-sm text-slate-300 md:col-span-2">
             Organization name
@@ -263,7 +263,7 @@ export function SettingsPanel({ token, user }: { token: string; user: User }) {
 
         <article className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 md:col-span-2">
           <h3 className="text-xl font-semibold">Members</h3>
-          <form className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_160px_auto]" onSubmit={inviteMember}>
+          <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_160px_auto]" onSubmit={inviteMember}>
             <input className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2" placeholder="Email" type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} />
             <input className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2" placeholder="Name optional" value={inviteName} onChange={(event) => setInviteName(event.target.value)} />
             <select className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as "ADMIN" | "MEMBER" | "REVIEWER")}>
@@ -271,7 +271,7 @@ export function SettingsPanel({ token, user }: { token: string; user: User }) {
               <option value="ADMIN">Admin</option>
               <option value="REVIEWER">Reviewer</option>
             </select>
-            <button className="rounded-xl bg-cyan-300 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60" disabled={loading || !inviteEmail} type="submit">Invite</button>
+            <button className="rounded-xl bg-cyan-300 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60 sm:col-span-2 lg:col-span-1" disabled={loading || !inviteEmail} type="submit">Invite</button>
           </form>
           <div className="mt-5 space-y-3">
             {members.map((member) => (

@@ -312,40 +312,46 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
 
   return (
     <div>
-      <header className="mb-6 flex flex-col gap-4 border-b border-frame-border pb-6 md:flex-row md:items-end md:justify-between">
+      <header className="mb-4 flex flex-col gap-3 border-b border-frame-border pb-4 sm:mb-6 sm:gap-4 sm:pb-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <Link className="text-sm text-frame-accent hover:underline" href="/dashboard">
+          <Link className="text-xs text-frame-accent hover:underline sm:text-sm" href="/dashboard">
             ← All projects
           </Link>
-          <h2 className="mt-2 text-2xl font-semibold">{project.name}</h2>
-          <p className="text-sm text-frame-muted">{project.organization.name}</p>
+          <h2 className="mt-1.5 text-lg font-semibold sm:mt-2 sm:text-2xl">{project.name}</h2>
+          <p className="text-xs text-frame-muted sm:text-sm">{project.organization.name}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {isAdmin ? (
             <button
               className="frame-btn-secondary"
               onClick={() => setMembersPanelOpen(!membersPanelOpen)}
               type="button"
             >
-              Members{projectMembers.length > 0 ? ` (${projectMembers.length})` : ""}
+              <span className="sm:hidden">Members{projectMembers.length > 0 ? ` (${projectMembers.length})` : ""}</span>
+              <span className="hidden sm:inline">Members{projectMembers.length > 0 ? ` (${projectMembers.length})` : ""}</span>
             </button>
           ) : null}
           <a className="frame-btn-primary" href="#upload">
-            + Upload
+            <span className="sm:hidden">+ Upload</span>
+            <span className="hidden sm:inline">+ Upload</span>
           </a>
           <button
-            className={`frame-btn-secondary !px-3 ${view === "grid" ? "border-frame-accent text-frame-accent" : ""}`}
+            className={`frame-btn-secondary !px-2 sm:!px-3 ${view === "grid" ? "border-frame-accent text-frame-accent" : ""}`}
             onClick={() => setView("grid")}
+            title="Grid view"
             type="button"
           >
-            Grid
+            <svg className="inline-block h-4 w-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
+            <span className="hidden sm:inline">Grid</span>
           </button>
           <button
-            className={`frame-btn-secondary !px-3 ${view === "list" ? "border-frame-accent text-frame-accent" : ""}`}
+            className={`frame-btn-secondary !px-2 sm:!px-3 ${view === "list" ? "border-frame-accent text-frame-accent" : ""}`}
             onClick={() => setView("list")}
+            title="List view"
             type="button"
           >
-            List
+            <svg className="inline-block h-4 w-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            <span className="hidden sm:inline">List</span>
           </button>
         </div>
       </header>
@@ -355,9 +361,9 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
       ) : null}
 
       {membersPanelOpen && isAdmin ? (
-        <section className="mb-8 frame-panel p-5">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-frame-muted">Project members</h3>
-          <p className="mt-1 text-sm text-frame-muted">
+        <section className="mb-6 frame-panel p-3 sm:mb-8 sm:p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-frame-muted sm:text-sm">Project members</h3>
+          <p className="mt-1 text-xs text-frame-muted sm:text-sm">
             {projectMembers.length === 0
               ? "No explicit members — all organization members can see this project."
               : "Only these members (plus Owners/Admins) can access this project."}
@@ -410,9 +416,9 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
         </section>
       ) : null}
 
-      <section className="mb-8 frame-panel p-5" id="upload">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-frame-muted">Upload for review</h3>
-        <p className="mt-1 text-sm text-frame-muted">
+      <section className="mb-6 frame-panel p-3 sm:mb-8 sm:p-5" id="upload">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-frame-muted sm:text-sm">Upload for review</h3>
+        <p className="mt-1 text-xs text-frame-muted sm:text-sm">
           Upload a rough cut (like Premiere&apos;s &quot;Upload active sequence&quot;) — then share a link for comments and drawings.
         </p>
         <form className="mt-4 grid gap-3 md:grid-cols-2" onSubmit={handleUpload}>
@@ -440,18 +446,18 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
         </form>
       </section>
 
-      <section className="mb-6 frame-panel p-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-frame-muted">Folders</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
+      <section className="mb-4 frame-panel p-3 sm:mb-6 sm:p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-frame-muted sm:text-sm">Folders</h3>
+        <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
           <button
-            className={`rounded-lg border px-3 py-2 text-sm ${selectedFolderId === null ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
+            className={`rounded-lg border px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${selectedFolderId === null ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
             onClick={() => setSelectedFolderId(null)}
             type="button"
           >
             All · {project.assets.length}
           </button>
           <button
-            className={`rounded-lg border px-3 py-2 text-sm ${selectedFolderId === "uncategorized" ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
+            className={`rounded-lg border px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${selectedFolderId === "uncategorized" ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
             onClick={() => setSelectedFolderId("uncategorized")}
             type="button"
           >
@@ -480,14 +486,14 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
               ) : (
                 <>
                   <button
-                    className={`rounded-lg border px-3 py-2 text-sm ${selectedFolderId === folder.id ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
+                    className={`rounded-lg border px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${selectedFolderId === folder.id ? "border-frame-accent text-frame-accent" : "border-frame-border bg-frame-panel-elevated"}`}
                     onClick={() => setSelectedFolderId(folder.id)}
                     type="button"
                   >
                     {folder.name} · {project.assets.filter((asset) => asset.folderId === folder.id).length}
                   </button>
                   <button
-                    className="rounded-lg border border-frame-border px-2 py-2 text-xs text-frame-muted hover:text-frame-text"
+                    className="rounded-lg border border-frame-border px-1.5 py-1.5 text-[11px] text-frame-muted hover:text-frame-text sm:px-2 sm:py-2 sm:text-xs"
                     onClick={() => {
                       setRenamingFolderId(folder.id);
                       setRenameFolderValue(folder.name);
@@ -497,7 +503,7 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
                     Rename
                   </button>
                   <button
-                    className="rounded-lg border border-frame-border px-2 py-2 text-xs text-rose-300 hover:bg-rose-500/10"
+                    className="rounded-lg border border-frame-border px-1.5 py-1.5 text-[11px] text-rose-300 hover:bg-rose-500/10 sm:px-2 sm:py-2 sm:text-xs"
                     onClick={() => void deleteFolder(folder.id)}
                     type="button"
                   >
@@ -523,9 +529,9 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
         </div>
 
         {project.assets.length === 0 ? (
-          <div className="frame-panel flex flex-col items-center justify-center border-dashed p-12 text-center">
-            <p className="text-lg font-medium">Upload your first asset</p>
-            <p className="mt-2 max-w-md text-sm text-frame-muted">
+          <div className="frame-panel flex flex-col items-center justify-center border-dashed p-6 text-center sm:p-12">
+            <p className="text-base font-medium sm:text-lg">Upload your first asset</p>
+            <p className="mt-2 max-w-md text-xs text-frame-muted sm:text-sm">
               Drop videos into this project, share a review link, and collect timecoded comments with drawings.
             </p>
             <a className="frame-btn-primary mt-6" href="#upload">
@@ -552,8 +558,8 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
             {visibleAssets.map((asset) => {
               const latest = latestVersion(asset);
               return (
-                <div className="frame-panel flex items-center justify-between p-4" key={asset.id}>
-                  <div>
+                <div className="frame-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" key={asset.id}>
+                  <div className="min-w-0">
                     <Link className="font-medium hover:text-frame-accent" href={latest ? `/review/${latest.id}` : `/assets/${asset.id}`}>
                       {asset.name}
                     </Link>
@@ -561,7 +567,7 @@ export function ProjectDetail({ projectId, token, user }: { projectId: string; t
                       {asset.versions.length} versions · {approvalLabel(assetApprovalStatus(asset))}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button className="frame-btn-secondary !py-1.5 text-xs" onClick={() => openSharePanel(asset)} type="button">
                       Share
                     </button>

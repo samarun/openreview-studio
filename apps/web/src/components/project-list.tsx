@@ -217,7 +217,7 @@ function ProjectListContent({ token, user }: { token: string; user: User }) {
         </section>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr] xl:grid-cols-[360px_1fr]">
         <aside className="space-y-6">
           <form className="frame-panel p-5" onSubmit={handleCreateProject}>
             <h3 className="text-sm font-semibold">Create project</h3>
@@ -245,7 +245,7 @@ function ProjectListContent({ token, user }: { token: string; user: User }) {
             </label>
             <label className="mt-4 block text-sm text-frame-muted">
               Video file
-              <input className="frame-input mt-2 file:mr-3 file:rounded-md file:border-0 file:bg-frame-accent file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" type="file" accept="video/*" onChange={(event) => setAssetFile(event.target.files?.[0] ?? null)} />
+              <input className="frame-input mt-2 text-xs file:mr-3 file:rounded-md file:border-0 file:bg-frame-accent file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" type="file" accept="video/*" onChange={(event) => setAssetFile(event.target.files?.[0] ?? null)} />
             </label>
             {uploadProgress !== null ? (
               <UploadProgressBar progress={uploadProgress} controller={uploadController ?? undefined} />

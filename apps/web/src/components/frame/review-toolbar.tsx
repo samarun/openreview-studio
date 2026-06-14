@@ -32,46 +32,48 @@ export function ReviewToolbar({
   rangeEndLabel
 }: ReviewToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-frame-border bg-frame-panel px-4 py-2">
+    <div className="flex flex-wrap items-center gap-1 border-t border-frame-border bg-frame-panel px-1.5 py-1.5 sm:gap-2 sm:px-4 sm:py-2">
       <button
-        className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${annotationMode ? "bg-frame-accent text-white" : "border border-frame-border text-frame-text hover:bg-white/5"}`}
+        className={`rounded-md px-2 py-1 text-[11px] font-semibold sm:rounded-lg sm:px-3 sm:py-1.5 sm:text-xs ${annotationMode ? "bg-frame-accent text-white" : "border border-frame-border text-frame-text hover:bg-white/5"}`}
         onClick={onToggleDraw}
         type="button"
       >
-        ✎ Draw
+        <span className="sm:hidden">✎</span>
+        <span className="hidden sm:inline">✎ Draw</span>
       </button>
       <select
-        className="rounded-lg border border-frame-border bg-frame-panel-elevated px-2 py-1.5 text-xs text-frame-text"
+        className="rounded-md border border-frame-border bg-frame-panel-elevated px-1.5 py-1 text-[11px] text-frame-text sm:rounded-lg sm:px-2 sm:py-1.5 sm:text-xs"
         onChange={(event) => onToolChange(event.target.value as AnnotationTool)}
         value={annotationTool}
       >
         <option value="freehand">Pen</option>
         <option value="arrow">Arrow</option>
-        <option value="rectangle">Rectangle</option>
+        <option value="rectangle">Rect</option>
         <option value="circle">Circle</option>
         <option value="text">Text</option>
       </select>
-      <div className="mx-1 h-5 w-px bg-frame-border" />
-      <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onPrevFrame} type="button">
-        ◀ Frame
+      <div className="mx-0.5 hidden h-4 w-px bg-frame-border sm:block" />
+      <button className="frame-btn-secondary !min-h-0 !px-1.5 !py-1 text-[11px] sm:!px-2 sm:!py-1.5 sm:text-xs" onClick={onPrevFrame} type="button">
+        ◀
       </button>
-      <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onNextFrame} type="button">
-        Frame ▶
+      <button className="frame-btn-secondary !min-h-0 !px-1.5 !py-1 text-[11px] sm:!px-2 sm:!py-1.5 sm:text-xs" onClick={onNextFrame} type="button">
+        ▶
       </button>
-      <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onUseCurrentTime} type="button">
-        @ Current time
+      <button className="frame-btn-secondary !min-h-0 !px-1.5 !py-1 text-[11px] sm:!px-2 sm:!py-1.5 sm:text-xs" onClick={onUseCurrentTime} type="button">
+        <span className="hidden sm:inline">@ Current time</span>
+        <span className="sm:hidden">@ Time</span>
       </button>
       {onMarkRangeStart ? (
-        <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onMarkRangeStart} type="button" title="Mark annotation range start">
+        <button className="hidden frame-btn-secondary !px-2 !py-1.5 text-xs sm:inline-flex" onClick={onMarkRangeStart} type="button" title="Mark annotation range start">
           Range start{rangeStartLabel ? `: ${rangeStartLabel}` : ""}
         </button>
       ) : null}
       {onMarkRangeEnd ? (
-        <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onMarkRangeEnd} type="button" title="Mark annotation range end">
+        <button className="hidden frame-btn-secondary !px-2 !py-1.5 text-xs sm:inline-flex" onClick={onMarkRangeEnd} type="button" title="Mark annotation range end">
           Range end{rangeEndLabel ? `: ${rangeEndLabel}` : ""}
         </button>
       ) : null}
-      <button className="frame-btn-secondary !px-2 !py-1.5 text-xs" onClick={onClearOverlay} type="button">
+      <button className="frame-btn-secondary !min-h-0 !px-1.5 !py-1 text-[11px] sm:!px-2 sm:!py-1.5 sm:text-xs" onClick={onClearOverlay} type="button">
         Clear
       </button>
     </div>

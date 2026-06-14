@@ -38,19 +38,19 @@ export function ShareLinkPanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose} role="presentation">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onClose} role="presentation">
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-frame-border bg-frame-panel p-5 shadow-frame"
+        className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-frame-border bg-frame-panel p-4 shadow-frame sm:max-h-[90vh] sm:rounded-xl sm:p-5"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Share for review</h3>
+        <div className="mb-3 flex items-center justify-between sm:mb-4">
+          <h3 className="text-base font-semibold sm:text-lg">Share for review</h3>
           <button className="text-frame-muted hover:text-frame-text" onClick={onClose} type="button">
             ✕
           </button>
         </div>
-        <p className="mb-4 text-sm text-frame-muted">
+        <p className="mb-3 text-xs text-frame-muted sm:mb-4 sm:text-sm">
           Guests can view, comment, and draw on the video.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
