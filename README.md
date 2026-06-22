@@ -2,7 +2,7 @@
 
 Open-source video review and collaboration platform for production teams. Upload cuts, share review links, collect timecoded feedback with drawings, compare versions side-by-side, and sync comments with **Adobe Premiere Pro** via a CEP panel.
 
-**Live demo:** [studio.arunsamuel.com](https://studio.arunsamuel.com)
+**Live demo:** [studio.arunsamuel.com](https://studio.arunsamuel.com) (i'm runnong this on my home Linux System, there might be downtime if there's power outage)
 
 ## Screenshots
 
