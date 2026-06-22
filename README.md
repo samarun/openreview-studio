@@ -16,6 +16,10 @@ Demo video: [Big Buck Bunny](https://test-videos.co.uk/bigbuckbunny/mp4-h264) (B
 |------------------|------------------|
 | ![Review interface](docs/screenshots/review-interface.png) | ![Processing](docs/screenshots/processing-state.png) |
 
+| Adobe Premiere Pro timeline |
+|-----------------------------|
+| ![Adobe Premiere Pro panel with timeline and synced comments](docs/screenshots/adobe-premiere-timeline.png) |
+
 ## Features
 
 - **Web review** — MP4/HLS playback, frame-accurate comments, drawing annotations, approvals, share links
