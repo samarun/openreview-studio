@@ -6,13 +6,15 @@ Open-source video review and collaboration platform for production teams. Upload
 
 ## Screenshots
 
-| Review interface | Adobe Premiere Pro panel |
-|------------------|--------------------------|
-| ![Review interface](docs/screenshots/review-interface.png) | ![Adobe panel upload](docs/screenshots/adobe-panel-upload.png) |
+Demo video: [Big Buck Bunny](https://test-videos.co.uk/bigbuckbunny/mp4-h264) (Blender Foundation, via [test-videos.co.uk](https://test-videos.co.uk/bigbuckbunny/mp4-h264)).
 
-| Markers & drawings in Premiere | Processing state |
-|--------------------------------|------------------|
-| ![Adobe panel markers](docs/screenshots/adobe-panel-markers.png) | ![Processing](docs/screenshots/processing-state.png) |
+| Login | Project workspace |
+|-------|-------------------|
+| ![Login](docs/screenshots/login.png) | ![Project workspace](docs/screenshots/project-workspace.png) |
+
+| Review interface | Processing state |
+|------------------|------------------|
+| ![Review interface](docs/screenshots/review-interface.png) | ![Processing](docs/screenshots/processing-state.png) |
 
 ## Features
 
