@@ -77,7 +77,7 @@ test("web reviewer workflow loads dashboard, review, and public share", async ({
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Login to dashboard" }).click();
+  await page.getByRole("button", { name: "Login to workspace" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("link", { name: "E2E Project" })).toBeVisible();
 
