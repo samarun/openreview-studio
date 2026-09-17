@@ -85,7 +85,7 @@ test("web reviewer workflow loads dashboard, review, and public share", async ({
   await expect(page.getByText("E2E Asset")).toBeVisible();
 
   await page.getByRole("link", { name: "E2E Asset" }).click();
-  await expect(page.getByText("Version 1")).toBeVisible();
+  await expect(page.getByText("v1", { exact: true })).toBeVisible();
   await page.goto(`/review/${versionId}`);
   await expect(page.getByText("Review E2E Asset")).toBeVisible();
   await expect(page.getByText("E2E comment")).toBeVisible();
