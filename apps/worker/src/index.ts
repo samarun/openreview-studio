@@ -222,7 +222,15 @@ async function processAssetVersion(assetVersionId: string, originalKey: string) 
       "-movflags", "+faststart",
       proxyPath
     ]);
-    await run("ffmpeg", ["-y", "-i", inputPath, "-ss", "00:00:01", "-frames:v", "1", "-vf", "scale=640:-2", thumbnailPath]);
+    await run("ffmpeg", [
+      "-y",
+      "-i", inputPath,
+      "-ss", "00:00:01",
+      "-frames:v", "1",
+      "-vf", "scale=640:-2",
+      "-strict", "unofficial",
+      thumbnailPath
+    ]);
     await run("ffmpeg", [
       "-y",
       "-i", proxyPath,
