@@ -82,8 +82,9 @@ jobs:
             fi
             sleep 2
           done
-          docker run --rm --network host quay.io/minio/mc:RELEASE.2024-11-21T17-21-54Z \
-            /bin/sh -c "
+          docker run --rm --network host --entrypoint /bin/sh \
+            quay.io/minio/mc:RELEASE.2024-11-21T17-21-54Z \
+            -c "
               mc alias set local http://localhost:9000 openreview openreview-secret &&
               mc mb --ignore-existing local/originals local/proxies
             "
