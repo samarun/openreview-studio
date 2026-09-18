@@ -188,7 +188,7 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
       <div className="grid flex-1 gap-6 md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_340px]">
         <section className="flex min-w-0 flex-col">
           <div className="frame-panel overflow-hidden bg-black p-0">
-            {previewVersion && (previewVersion.proxyKey || previewVersion.hlsManifestKey) ? (
+            {previewVersion ? (
               <ReviewPlayer
                 authQuery={`token=${encodeURIComponent(token)}`}
                 layout="aspect"
@@ -198,7 +198,7 @@ export function AssetDetail({ assetId, token }: { assetId: string; token: string
               />
             ) : (
               <div className="flex aspect-video items-center justify-center bg-black text-frame-muted">
-                {previewVersion ? "Processing this version…" : "Upload a version to get started."}
+                Upload a version to get started.
               </div>
             )}
           </div>
