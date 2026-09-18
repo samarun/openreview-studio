@@ -28,7 +28,7 @@ export function useReviewEvents(
     let attempt = 0;
 
     const connect = () => {
-      const url = new URL(`${API_URL}${path}`);
+      const url = new URL(`${API_URL}${path}`, window.location.origin);
       if (token) url.searchParams.set("token", token);
       source = new EventSource(url.toString(), { withCredentials: false });
 

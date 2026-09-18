@@ -47,7 +47,11 @@ export function VersionStackRow({ version, active, compareHref, onSelect, onArch
             {formatDuration(version.durationSeconds)}
             {version.width && version.height ? ` · ${version.width}×${version.height}` : ""}
           </p>
-          {version.failureReason ? <p className="mt-1 text-xs text-rose-300">{version.failureReason}</p> : null}
+          {version.failureReason ? (
+            <p className="mt-1 line-clamp-3 break-words text-xs text-rose-300" title={version.failureReason}>
+              {version.failureReason}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
