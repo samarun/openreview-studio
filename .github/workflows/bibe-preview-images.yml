@@ -56,7 +56,7 @@ jobs:
           push: true
           tags: ghcr.io/samarun/${{ matrix.image }}:sha-${{ github.event.pull_request.head.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=https://openreview-pr-${{ github.event.pull_request.number }}.git.arunsamuel.com/api
+            NEXT_PUBLIC_API_URL=/api
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}
