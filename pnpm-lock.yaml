@@ -142,6 +142,9 @@ importers:
       '@openreview/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@openreview/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       bullmq:
         specifier: ^5.34.2
         version: 5.76.6

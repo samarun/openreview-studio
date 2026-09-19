@@ -10,6 +10,7 @@ import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { prisma } from "@openreview/db";
+import { configuredFlociSqsClient } from "@openreview/shared/floci-sqs";
 
 type JobData = { assetVersionId?: string; originalKey?: string };
 type ProbeResult = {
@@ -184,6 +185,12 @@ async function probe(inputPath: string) {
 }
 
 async function processAssetVersion(assetVersionId: string, originalKey: string) {
+  const existing = await prisma.assetVersion.findUnique({ where: { id: assetVersionId } });
+  if (!existing || existing.originalKey !== originalKey) {
+    throw new Error("Queued asset version does not match the database record");
+  }
+  if (existing.status === "READY") return { assetVersionId, alreadyReady: true };
+
   const workingDirectory = fileURLToPath(new URL(`openreview-${assetVersionId}-${Date.now()}/`, `file://${tmpdir()}/`));
   const inputPath = join(workingDirectory, "input");
   const outputDirectory = join(workingDirectory, "output");
@@ -283,28 +290,75 @@ async function processAssetVersion(assetVersionId: string, originalKey: string) 
   }
 }
 
-const worker = new Worker(
-  "transcode",
-  async (job) => {
-    const data = job.data as JobData;
+const queueBackend = process.env.QUEUE_BACKEND ?? "bullmq";
+if (queueBackend !== "bullmq" && queueBackend !== "floci-sqs") {
+  throw new Error(`Unsupported QUEUE_BACKEND: ${queueBackend}`);
+}
 
-    if (!data.assetVersionId || !data.originalKey) {
-      throw new Error("assetVersionId and originalKey are required");
+let stopping = false;
+let sqsLoop: Promise<void> | undefined;
+let worker: Worker | undefined;
+
+if (queueBackend === "bullmq") {
+  worker = new Worker(
+    "transcode",
+    async (job) => {
+      const data = job.data as JobData;
+      if (!data.assetVersionId || !data.originalKey) {
+        throw new Error("assetVersionId and originalKey are required");
+      }
+      return processAssetVersion(data.assetVersionId, data.originalKey);
+    },
+    { connection, concurrency: Number.isFinite(workerConcurrency) && workerConcurrency > 0 ? workerConcurrency : 1 }
+  );
+  worker.on("completed", (job) => console.log("completed transcode job", job.id));
+  worker.on("failed", (job, error) => console.error("failed transcode job", job?.id, error));
+} else {
+  const sqs = configuredFlociSqsClient(process.env);
+  sqsLoop = (async () => {
+    while (!stopping) {
+      try {
+        for (const message of await sqs.receive()) {
+          if (!message.Body || !message.ReceiptHandle) {
+            console.error("Floci SQS message missing body or receipt handle", message.MessageId);
+            continue;
+          }
+          const receiptHandle = message.ReceiptHandle;
+          const heartbeat = setInterval(() => {
+            void sqs.extendVisibility(receiptHandle).catch((error: unknown) =>
+              console.error("Floci SQS visibility extension failed", error)
+            );
+          }, 60_000);
+          try {
+            const data = JSON.parse(message.Body) as JobData;
+            if (!data.assetVersionId || !data.originalKey) {
+              throw new Error("assetVersionId and originalKey are required");
+            }
+            await processAssetVersion(data.assetVersionId, data.originalKey);
+            await sqs.delete(receiptHandle);
+            console.log("completed Floci SQS transcode job", message.MessageId);
+          } catch (error) {
+            // Do not acknowledge failures: SQS visibility and the queue's redrive policy handle retries.
+            console.error("failed Floci SQS transcode job", message.MessageId, error);
+          } finally {
+            clearInterval(heartbeat);
+          }
+        }
+      } catch (error) {
+        console.error("Floci SQS receive failed; retrying", error);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
     }
+  })();
+}
 
-    return processAssetVersion(data.assetVersionId, data.originalKey);
-  },
-  { connection, concurrency: Number.isFinite(workerConcurrency) && workerConcurrency > 0 ? workerConcurrency : 1 }
-);
-
-worker.on("completed", (job) => console.log("completed transcode job", job.id));
-worker.on("failed", (job, error) => console.error("failed transcode job", job?.id, error));
-
-console.log("OpenReview worker listening for transcode jobs");
+console.log(`OpenReview worker listening for ${queueBackend} transcode jobs`);
 
 async function shutdown(signal: string) {
   console.log(`received ${signal}; shutting down worker`);
-  await worker.close();
+  stopping = true;
+  if (worker) await worker.close();
+  if (sqsLoop) await sqsLoop;
   await connection.quit();
   await prisma.$disconnect();
 }

@@ -14,21 +14,24 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/worker/package.json ./apps/worker/
 COPY packages/db/package.json ./packages/db/
+COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile
 
 # ── Stage 2: Build ───────────────────────────────────────────
 FROM deps AS build
 COPY tsconfig.base.json ./
 COPY packages/db ./packages/db
+COPY packages/shared ./packages/shared
 COPY apps/worker ./apps/worker
 
 RUN pnpm --filter @openreview/db generate
 RUN pnpm --filter @openreview/db build
+RUN pnpm --filter @openreview/shared build
 RUN pnpm --filter @openreview/worker build
 
 # Rewrite main field so Node.js resolves compiled JS (not .ts source)
 RUN sed -i 's|"main": "src/index.ts"|"main": "dist/index.js"|g' \
-      packages/db/package.json
+      packages/db/package.json packages/shared/package.json
 
 # ── Stage 3: Production runner ───────────────────────────────
 FROM base AS runner
@@ -46,6 +49,11 @@ COPY --from=build /app/packages/db/package.json ./packages/db/
 COPY --from=build /app/packages/db/dist ./packages/db/dist
 COPY --from=build /app/packages/db/prisma ./packages/db/prisma
 COPY --from=build /app/packages/db/node_modules ./packages/db/node_modules
+
+# @openreview/shared — local SQS transport
+COPY --from=build /app/packages/shared/package.json ./packages/shared/
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+COPY --from=build /app/packages/shared/node_modules ./packages/shared/node_modules
 
 # @openreview/worker — compiled output + per-package modules
 COPY --from=build /app/apps/worker/package.json ./apps/worker/
