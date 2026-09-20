@@ -32,21 +32,28 @@ characters. Quotes are unnecessary for these hex values. Do not copy the
 terminal prompt or angle-bracket placeholders into the file. The environment
 file is Git-ignored.
 
-On the current Ubuntu host, port 8088 is already used by another service, so
-the isolated deployment sets `BIBE_LOCAL_PORT=8089`. Use the configured port
-for the health check and any SSH tunnel rather than assuming the default.
+On the current Ubuntu host, port 8088 is used by another service and 8089 is
+reserved for the Kubernetes preview ingress. Set `BIBE_LOCAL_PORT=8093` in the
+isolated deployment. Use the configured port for health checks and SSH tunnels;
+the example below uses the Ubuntu value.
 
 ```sh
 docker compose --env-file .env.bibe-local -f docker-compose.bibe-local.yml config --quiet
 docker compose --env-file .env.bibe-local -f docker-compose.bibe-local.yml up -d --build
 docker compose --env-file .env.bibe-local -f docker-compose.bibe-local.yml ps
-curl --fail --show-error http://127.0.0.1:8088/api/health/ready
+curl --fail --show-error http://127.0.0.1:8093/api/health/ready
 ```
 
-Open `http://127.0.0.1:8088/`. The gateway mirrors the preview's same-origin
-routes: `/api` goes to Fastify, `/media` to the API, and `/originals` and
-`/proxies` to MinIO. The migration/seed container runs before the API starts.
-The FFmpeg worker has concurrency 1 and a 2 GB memory cap.
+Open `http://127.0.0.1:8093/` on Ubuntu (or the port you selected). The
+gateway mirrors the preview's same-origin routes: `/api` goes to Fastify,
+`/media` to the API, and `/originals` and `/proxies` to MinIO. The migration/seed
+container runs before the API starts. The FFmpeg worker has concurrency 1 and
+a 2 GB memory cap.
+
+This Compose project is intentionally on-demand, not a boot service. After a
+host restart, use the same `up -d --no-build` command to restore it; the named
+database, Redis, MinIO, and registry volumes are retained. On the Ubuntu host,
+keep port 8089 free for the separate Kubernetes preview ingress.
 
 ## Use exact pre-built images instead
 
@@ -104,8 +111,9 @@ If the optional registry is running, also stop it with
 
 ## Verification limits
 
-`docker compose config --quiet` checks the Compose structure. A real build,
-browser login, upload, worker completion, and restart/persistence test still
-need a working local Docker socket and the images. The Kubernetes preview has
-additional isolation (namespace, quotas, Pod Security, and NetworkPolicies)
-that Compose does not reproduce.
+`docker compose config --quiet` checks only the Compose structure. On the
+Ubuntu host, the exact-SHA image build, registry push/pull, API readiness, and
+demo login were verified. After a host power cut, `up -d --no-build` restored
+the stack from retained volumes on port 8093; API readiness and demo login
+passed again. The Kubernetes preview has additional isolation (namespace,
+quotas, Pod Security, and NetworkPolicies) that Compose does not reproduce.
