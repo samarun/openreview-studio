@@ -1,0 +1,66 @@
+# Run with scripts/bibe-local-mac.sh dev-start / dev-watch.
+# The dev project has separate containers and volumes from the exact-image lab.
+services:
+  migrate:
+    image: openreview-bibe-dev-api:local
+    build:
+      target: build
+
+  api:
+    image: openreview-bibe-dev-api:local
+    build:
+      target: build
+    environment:
+      NODE_ENV: development
+    command: ["pnpm", "--filter", "@openreview/api", "dev"]
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./apps/api/src
+          target: /app/apps/api/src
+        - action: rebuild
+          path: ./packages
+        - action: rebuild
+          path: ./apps/api/package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+
+  worker:
+    image: openreview-bibe-dev-worker:local
+    build:
+      target: build
+    environment:
+      NODE_ENV: development
+    command: ["pnpm", "--filter", "@openreview/worker", "dev"]
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./apps/worker/src
+          target: /app/apps/worker/src
+        - action: rebuild
+          path: ./packages
+        - action: rebuild
+          path: ./apps/worker/package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+
+  web:
+    image: openreview-bibe-dev-web:local
+    build:
+      target: build
+    environment:
+      NODE_ENV: development
+    command: ["pnpm", "--filter", "@openreview/web", "exec", "next", "dev", "--hostname", "0.0.0.0", "--port", "3000"]
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/web/src
+          target: /app/apps/web/src
+        - action: rebuild
+          path: ./packages
+        - action: rebuild
+          path: ./apps/web/package.json
+        - action: rebuild
+          path: ./apps/web/next.config.ts
+        - action: rebuild
+          path: ./pnpm-lock.yaml

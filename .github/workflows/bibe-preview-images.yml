@@ -61,3 +61,33 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}
             org.opencontainers.image.title=OpenReview Studio ${{ matrix.component }} PR preview
+
+  preview-route-check:
+    name: Preview HTTPS and API reachable
+    needs: publish-preview-images
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'bibe-preview')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Wait for authenticated web route and healthy same-origin API
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          host="openreview-pr-${PR_NUMBER}.git.arunsamuel.com"
+          for attempt in $(seq 1 60); do
+            web_status=$(curl --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' "https://${host}/" || true)
+            api_status=$(curl --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' "https://${host}/api/health/ready" || true)
+            if [[ "$web_status" == "401" && "$api_status" == "200" ]]; then
+              echo "Preview web authentication and API readiness are reachable over verified HTTPS."
+              echo "URL: https://${host}/"
+              exit 0
+            fi
+            echo "Attempt ${attempt}: web=${web_status}, api=${api_status}; waiting for reconciliation"
+            sleep 10
+          done
+          echo "Preview route did not become reachable: https://${host}/" >&2
+          exit 1

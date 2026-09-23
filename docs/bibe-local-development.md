@@ -16,6 +16,56 @@ Do not run this stack on the same ports or volumes as an existing OpenReview
 deployment. The Compose project name and volumes are isolated, and the sole
 published port binds to `127.0.0.1`.
 
+## Recommended Mac workflow with OrbStack
+
+The Mac launcher creates a mode-0600, Git-ignored environment file with fresh
+local secrets. It refuses uncommitted application/build inputs when publishing
+exact-SHA images, then builds web, API, and worker from the current Git revision,
+publishes all three under exact `sha-<commit>` tags to a loopback-only registry,
+pulls those tags back, starts the isolated Compose project, and verifies API
+readiness plus the demo login. It never connects to the Ubuntu BIBE server.
+
+```sh
+chmod +x scripts/bibe-local-mac.sh
+./scripts/bibe-local-mac.sh setup
+```
+
+The application is then available at `http://127.0.0.1:8088/`. Useful lifecycle
+commands are:
+
+```sh
+./scripts/bibe-local-mac.sh status
+./scripts/bibe-local-mac.sh verify
+./scripts/bibe-local-mac.sh stop
+./scripts/bibe-local-mac.sh start
+```
+
+`stop` retains the Mac-only PostgreSQL, Redis, MinIO, and registry volumes. The
+launcher deliberately has no volume-deletion command. This is the closest local
+developer loop in this lab to the public description of Hermes, but it is not
+Buffer's private Hermes implementation.
+
+To test the whole media path, run `./scripts/bibe-local-mac.sh media-canary`.
+It uploads a generated one-second video, waits for the worker to produce a
+proxy and thumbnail, and downloads both through the local gateway. It creates
+a small demo asset in this Mac-only database.
+
+For source editing, there is a separate development stack on
+`http://127.0.0.1:8087/`. It has its own containers, secrets and data volumes:
+
+```sh
+./scripts/bibe-local-mac.sh dev-start
+./scripts/bibe-local-mac.sh dev-watch  # keep this running in another terminal
+```
+
+Compose Watch syncs web source into the running container and restarts API or
+worker development processes on source changes. Dependency/config changes
+rebuild the affected image. After editing, run
+`./scripts/bibe-local-mac.sh dev-verify` and
+`./scripts/bibe-local-mac.sh dev-media-canary`; `dev-status` shows containers
+and `dev-stop` stops them without deleting their data. This stack does not
+touch the Ubuntu server or real AWS.
+
 ## Start from source
 
 From the OpenReview repository root:

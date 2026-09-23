@@ -5,6 +5,7 @@ dist
 .env
 .env.local
 .env.bibe-local
+.env.bibe-dev
 packages/db/.env
 coverage
 *.log
