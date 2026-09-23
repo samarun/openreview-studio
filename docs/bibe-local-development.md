@@ -60,7 +60,8 @@ For source editing, there is a separate development stack on
 
 Compose Watch syncs web source into the running container and restarts API or
 worker development processes on source changes. Dependency/config changes
-rebuild the affected image. After editing, run
+rebuild the affected image; rerun `dev-start` after a rebuild so the local
+gateway refreshes its service addresses. After editing, run
 `./scripts/bibe-local-mac.sh dev-verify` and
 `./scripts/bibe-local-mac.sh dev-media-canary`; `dev-status` shows containers
 and `dev-stop` stops them without deleting their data. This stack does not

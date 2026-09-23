@@ -164,6 +164,9 @@ start_stack() {
 
   echo "Starting the isolated local stack..."
   compose up -d --no-build --wait --wait-timeout 300
+  # Nginx resolves Compose service names at startup. After a new commit changes
+  # container IPs, refresh only this project's gateway before health checks.
+  compose up -d --no-build --no-deps --force-recreate gateway
 }
 
 verify_stack() {
@@ -290,6 +293,7 @@ main() {
     dev-start)
       create_dev_env_file
       dev_compose up -d --build --wait --wait-timeout 300
+      dev_compose up -d --no-build --no-deps --force-recreate gateway
       verify_dev_stack
       ;;
     dev-watch)
