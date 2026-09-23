@@ -28,7 +28,7 @@ jobs:
         ports:
           - 6379:6379
       minio:
-        image: minio/minio:latest
+        image: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
         env:
           MINIO_ROOT_USER: openreview
           MINIO_ROOT_PASSWORD: openreview-secret
@@ -82,8 +82,9 @@ jobs:
             fi
             sleep 2
           done
-          docker run --rm --network host minio/mc:RELEASE.2024-11-21T17-21-54Z \
-            /bin/sh -c "
+          docker run --rm --network host --entrypoint /bin/sh \
+            quay.io/minio/mc:RELEASE.2024-11-21T17-21-54Z \
+            -c "
               mc alias set local http://localhost:9000 openreview openreview-secret &&
               mc mb --ignore-existing local/originals local/proxies
             "
@@ -108,6 +109,9 @@ jobs:
 
       - name: Seed guard test
         run: node --import tsx --test tests/seed-guard.test.ts
+
+      - name: Sentry privacy test
+        run: node --import tsx --test tests/sentry-privacy.test.ts
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps

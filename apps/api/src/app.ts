@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { jwtSecret } from "./context.js";
 import { serializeJson } from "./lib/serialize.js";
+import { reportServerError } from "./lib/sentry.js";
 import { registerAssetRoutes } from "./routes/assets.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerEventRoutes } from "./routes/events.js";
@@ -92,6 +93,7 @@ export async function buildApp() {
 
     if (statusCode >= 500) {
       app.log.error(normalizedError);
+      reportServerError(normalizedError);
     }
 
     return reply.code(statusCode).send({

@@ -1,5 +1,6 @@
 import { prisma, redis, transcodeQueue } from "./context.js";
 import { buildApp } from "./app.js";
+import { flushErrorReports } from "./lib/sentry.js";
 
 const app = await buildApp();
 const port = Number(process.env.PORT ?? 4000);
@@ -11,6 +12,7 @@ async function shutdown(signal: string) {
   await transcodeQueue.close();
   await redis.quit();
   await prisma.$disconnect();
+  await flushErrorReports();
 }
 
 process.once("SIGTERM", () => void shutdown("SIGTERM"));

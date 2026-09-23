@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { Redis } from "ioredis";
 import nodemailer from "nodemailer";
 import { prisma } from "@openreview/db";
+import { configuredFlociSqsClient } from "@openreview/shared/floci-sqs";
 
 export function requireInProduction(name: string) {
   const value = process.env[name];
@@ -45,15 +46,33 @@ redis.on("error", (err) => {
   console.error("[redis] connection error:", err.message);
 });
 
-export const transcodeQueue = new Queue("transcode", {
-  connection: redis,
-  defaultJobOptions: {
-    attempts: Number(process.env.TRANSCODE_JOB_ATTEMPTS ?? 3),
-    backoff: { type: "exponential", delay: Number(process.env.TRANSCODE_JOB_BACKOFF_MS ?? 30_000) },
-    removeOnComplete: { age: Number(process.env.TRANSCODE_JOB_COMPLETE_RETENTION_SECONDS ?? 24 * 60 * 60), count: 1000 },
-    removeOnFail: { age: Number(process.env.TRANSCODE_JOB_FAILED_RETENTION_SECONDS ?? 7 * 24 * 60 * 60), count: 5000 }
+const queueBackend = process.env.QUEUE_BACKEND ?? "bullmq";
+if (queueBackend !== "bullmq" && queueBackend !== "floci-sqs") {
+  throw new Error(`Unsupported QUEUE_BACKEND: ${queueBackend}`);
+}
+
+const bullmqQueue = queueBackend === "bullmq"
+  ? new Queue("transcode", {
+      connection: redis,
+      defaultJobOptions: {
+        attempts: Number(process.env.TRANSCODE_JOB_ATTEMPTS ?? 3),
+        backoff: { type: "exponential", delay: Number(process.env.TRANSCODE_JOB_BACKOFF_MS ?? 30_000) },
+        removeOnComplete: { age: Number(process.env.TRANSCODE_JOB_COMPLETE_RETENTION_SECONDS ?? 24 * 60 * 60), count: 1000 },
+        removeOnFail: { age: Number(process.env.TRANSCODE_JOB_FAILED_RETENTION_SECONDS ?? 7 * 24 * 60 * 60), count: 5000 }
+      }
+    })
+  : null;
+const flociQueue = queueBackend === "floci-sqs" ? configuredFlociSqsClient(process.env) : null;
+
+export const transcodeQueue = {
+  async add(name: string, data: { assetVersionId: string; originalKey: string }) {
+    if (bullmqQueue) return bullmqQueue.add(name, data);
+    await flociQueue!.send(data);
+  },
+  async close() {
+    if (bullmqQueue) await bullmqQueue.close();
   }
-});
+};
 
 export const originalsBucket = process.env.S3_BUCKET_ORIGINALS ?? "originals";
 export const proxiesBucket = process.env.S3_BUCKET_PROXIES ?? "proxies";
@@ -107,7 +126,7 @@ export type AppContext = {
   prisma: typeof prisma;
   redis: Redis;
   s3: S3Client;
-  transcodeQueue: Queue;
+  transcodeQueue: typeof transcodeQueue;
 };
 
 export function createContext(app: FastifyInstance): AppContext {

@@ -269,14 +269,18 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, ReviewPlayerProps>(fu
     .join(" ");
 
   if (!canPlay) {
+    const failed = version.status === "FAILED";
+
     return (
       <div
         className={`review-player-root flex items-center justify-center bg-black ${presenterMode ? "min-h-[70vh]" : "aspect-video"}`}
       >
-        <div className="px-6 text-center">
-          <p className="text-lg font-medium text-frame-text">Processing video</p>
-          <p className="mt-2 text-sm text-frame-muted">
-            {version.status === "FAILED"
+        <div className="max-w-2xl px-6 text-center">
+          <p className={`text-lg font-medium ${failed ? "text-rose-300" : "text-frame-text"}`}>
+            {failed ? "Video processing failed" : "Processing video"}
+          </p>
+          <p className="mt-2 max-h-28 overflow-y-auto break-words text-sm text-frame-muted">
+            {failed
               ? version.failureReason ?? "Transcode failed"
               : version.hlsManifestKey && !version.proxyKey
                 ? "Proxy still processing — refresh shortly."
