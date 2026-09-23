@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { prisma } from "@openreview/db";
 import { configuredFlociSqsClient } from "@openreview/shared/floci-sqs";
+import { flushErrorReports, reportTranscodeError } from "./sentry.js";
 
 type JobData = { assetVersionId?: string; originalKey?: string };
 type ProbeResult = {
@@ -312,7 +313,10 @@ if (queueBackend === "bullmq") {
     { connection, concurrency: Number.isFinite(workerConcurrency) && workerConcurrency > 0 ? workerConcurrency : 1 }
   );
   worker.on("completed", (job) => console.log("completed transcode job", job.id));
-  worker.on("failed", (job, error) => console.error("failed transcode job", job?.id, error));
+  worker.on("failed", (job, error) => {
+    console.error("failed transcode job", job?.id, error);
+    reportTranscodeError(error);
+  });
 } else {
   const sqs = configuredFlociSqsClient(process.env);
   sqsLoop = (async () => {
@@ -340,6 +344,7 @@ if (queueBackend === "bullmq") {
           } catch (error) {
             // Do not acknowledge failures: SQS visibility and the queue's redrive policy handle retries.
             console.error("failed Floci SQS transcode job", message.MessageId, error);
+            reportTranscodeError(error instanceof Error ? error : new Error("Unknown error"));
           } finally {
             clearInterval(heartbeat);
           }
@@ -361,6 +366,7 @@ async function shutdown(signal: string) {
   if (sqsLoop) await sqsLoop;
   await connection.quit();
   await prisma.$disconnect();
+  await flushErrorReports();
 }
 
 process.once("SIGTERM", () => void shutdown("SIGTERM"));

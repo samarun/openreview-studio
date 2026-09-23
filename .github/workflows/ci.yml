@@ -110,6 +110,9 @@ jobs:
       - name: Seed guard test
         run: node --import tsx --test tests/seed-guard.test.ts
 
+      - name: Sentry privacy test
+        run: node --import tsx --test tests/sentry-privacy.test.ts
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
